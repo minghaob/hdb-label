@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>HundoDB Labeling Tool</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<link rel="stylesheet" href="styles.css">
+	<script src="common.js"></script>
+</head>
+<body>
+	<div id="container">
+		<div id="left-panel" style="width: 500px;">
+			<h2>HundoDB Labeling Tool</h2>
+			<div style="padding-bottom: 10px;">
+				<button id="btn-access">Choose Run Folder</button>
+			</div>
+			<canvas id="video-frame"></canvas>
+			<script>
+				{
+					const canvas = document.getElementById('video-frame');
+					const ctx = canvas.getContext('2d');
+					ctx.fillStyle = "black";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = "50px Arial";
+					ctx.fillStyle = "white";
+					ctx.textBaseline = "middle";
+					ctx.textAlign = "center";
+					ctx.fillText("Video Frame",canvas.width / 2, canvas.height / 2);
+				}
+			</script>
+			<div style="padding-top: 5px; padding-bottom: 10px;">
+				<button id="rewind_20s">&#60; 20s</button>
+				<button id="rewind_5s">&#60; 5s</button>
+				<button id="rewind_1s">&#60; 1s</button>
+				<button id="forward_1s">&#62; 1s</button>
+				<button id="forward_5s">&#62; 5s</button>
+				<button id="forward_20s">&#62; 20s</button>
+			</div>
+			<div id="table-container">
+				<table>
+					<thead>
+						<tr>
+							<th>Frame</th>
+							<th>Info</th>
+							<th>Label</th>
+							<th>Comment</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>12345</td>
+							<td>Korok Seed</td>
+							<td>F01</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>23456</td>
+							<td>Spirit Orb</td>
+							<td>Mogg Latan Shrine</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>34567</td>
+							<td>Sheikah Tower activated.</td>
+							<td>Tabantha Tower</td>
+							<td></td>
+						</tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+						<tr><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+					</tbody>
+				</table>
+			</div>
+			<h4 style="font-family: 'Open Sans', sans-serif; margin-top: 10px; margin-bottom: 5px">Log</h4>
+			<div id="log" style="width: 100%; height: 200px; min-height: 200xp; overflow-y: scroll; font-family: 'Open Sans', sans-serif; font-size: 14px;"></div>
+			<script src="log.js"></script>
+		</div>
+		<div id="divider"></div>
+		<div id="right-panel">
+			<div id="map"></div>
+		</div>
+	</div>
+	<script src="splitter.js"></script>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script>
+		var map;
+		function initMap() {
+			map = L.map('map', {
+				minZoom: -3,
+				maxZoom: 4,
+				center: [0, 0],
+				zoom: -2,
+				maxBoundsViscosity: 1,
+				crs: L.CRS.Simple
+			});
+
+			// Dimensions of the image
+			var w = 6000;  // width of the image in pixels
+			var h = 5000;  // height of the image
+
+			// Calculate the edges of the image, in coordinates
+			var southWest = map.unproject([-w, h], 0);
+			var northEast = map.unproject([w, -h], 0);
+			var bounds = new L.LatLngBounds(southWest, northEast);
+
+			map.setMaxBounds(bounds);
+
+			// Add the image overlay 
+			// (replace 'path_to_your_large_image.jpg' with the path to your image file)
+			L.imageOverlay('botw-map.jpg', bounds).addTo(map);
+			logMessage('Loaded map');
+
+			// Set the view to the center of the image
+			// map.fitBounds(bounds);
+
+			var korokIcon = L.icon({
+				iconUrl: 'icons/korok.png',
+				iconSize:     [20, 20],
+				iconAnchor:   [10, 10],
+			});
+			var orbIcon = L.icon({
+				iconUrl: 'icons/orb.png',
+				iconSize:     [20, 20],
+				iconAnchor:   [10, 10],
+			});
+			var towerIcon = L.icon({
+				iconUrl: 'icons/tower.png',
+				iconSize:     [20, 20],
+				iconAnchor:   [10, 10],
+			});
+
+			fetch('coords.json').then(response => {
+				if (response.ok)
+					return response.json();
+			})
+			.then(data => {
+				for (let k in data){
+					let icon;
+					let zOffset = 0;
+					if (k.endsWith('Tower')) {
+						icon = towerIcon;
+						zOffset = 10000;
+					}
+					else if (k.endsWith('Shrine')) {
+						icon = orbIcon;
+						zOffset = 5000;
+					}
+					else if (k.length == 3) {
+						icon = korokIcon;
+						zOffset = data[k].Y;
+					}
+					else
+						continue;
+					L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset}).addTo(map).bindTooltip(k);
+				}
+				logMessage('Loaded map elements');
+			})
+			.catch(error => {
+				logMessage('Cannot loaded map elements');
+			});
+		}
+
+		initMap();
+	</script>
+	<script>
+	</script>
+</body>
+</html>

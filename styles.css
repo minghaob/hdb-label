@@ -1,0 +1,71 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+#container {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+}
+
+#left-panel, #right-panel {
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+#left-panel {
+    background-color: #f4f4f4;
+    padding: 10px;
+	display: flex;
+	flex-direction: column;
+}
+
+#right-panel {
+    background-color: #fff;
+}
+
+#divider {
+    background-color: #888;
+    width: 5px;
+    cursor: ew-resize;
+}
+
+#video-frame{
+	aspect-ratio: 16/9;
+	width: 100%;
+	height: auto;
+	max-width: 1080px;
+}
+
+#map {
+	height: 100%;
+	width: 100%;
+	background-color: black;
+}
+
+#table-container{
+	overflow-y: auto;
+	flex-grow: 1;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	user-select: none;
+}
+th, td {
+	border: 1px solid #dddddd;
+	text-align: left;
+	padding: 3px;
+	font-size: 12px;
+}
+th {
+	background-color: #f2f2f2;
+	font-size: 13px;
+}
+tr:nth-child(even) {
+	background-color: #f9f9f9;
+}
