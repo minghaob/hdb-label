@@ -27,7 +27,7 @@ divider.addEventListener('mousedown', function(e) {
         startX = e.clientX; // Update startX to the new position for the next calculation
 
         // Calculate new width for the left panel within allowable bounds
-        const newLeftWidth = Math.max(340, Math.min(container.offsetWidth - 340, leftPanel.offsetWidth + dx));
+        const newLeftWidth = Math.max(500, Math.min(container.offsetWidth - 500, leftPanel.offsetWidth + dx));
         leftPanel.style.width = `${newLeftWidth}px`;
 
         // Adjust the right panel's width

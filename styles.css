@@ -49,12 +49,14 @@ body, html {
 #table-container{
 	overflow-y: auto;
 	flex-grow: 1;
+	width: 480px;
 }
 
 table {
 	width: 100%;
 	border-collapse: collapse;
 	user-select: none;
+	white-space: nowrap;
 }
 th, td {
 	border: 1px solid #dddddd;
