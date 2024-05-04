@@ -55,6 +55,9 @@ function init() {
 					throw ('expecting video element in run.yaml as array');
 			}
 
+			const canvas = document.getElementById('video-frame');
+			const canvasContext = canvas.getContext('2d');
+
 			// load the video files to video elements
 			let videos = [];
 			let numLoadedVideos = 0;
@@ -141,12 +144,14 @@ function init() {
 						}
 
 						// feed collected events to event table
-						{	// first clear existing table content
+						{
+							// first clear existing table content
 							const tbodyEle = document.querySelector('#event-table tbody');
 							while (tbodyEle.firstChild) {
 								tbodyEle.removeChild(tbodyEle.firstChild);
 							}
 
+							// insert one row for each event
 							for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
 								const newRow = tbodyEle.insertRow(-1);
 								newRow.insertCell(-1).innerHTML = events[eventIdx].overallFrame;	// frame
@@ -168,6 +173,15 @@ function init() {
 					}
 				});
 
+				video.addEventListener('seeked', () => {
+					if (canvas.width != video.videoWidth)
+						canvas.width = video.videoWidth;
+					if (canvas.height != video.videoHeight)
+						canvas.height = video.videoHeight;
+
+					canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+				});
+
 				videos.push(video);
 			}
 		} catch (error) {
@@ -181,6 +195,8 @@ function selectEvent(eventIdx) {
 		logMessage('Selecting invalid event index: ' + eventIdx);
 		return;
 	}
+
+	g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
 }
 
 init();
