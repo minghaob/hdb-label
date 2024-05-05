@@ -200,7 +200,10 @@ function initTable() {
 		// Continue only if the clicked element is a TD and its parent is not a THEAD
 		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
 			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
-			selectEvent(targetRow.rowIndex - 1);
+			if (targetRow.rowIndex - 1 == g_selectedEventIdx)
+				unselectEvent();						// clicking the selected event row unselects it
+			else
+				selectEvent(targetRow.rowIndex - 1);	// otherwise select it
 		}
 	});
 }
@@ -210,6 +213,7 @@ function init() {
 	initTable();
 }
 
+// select a certain event
 function selectEvent(eventIdx) {
 	if (!g_events)
 		return;
@@ -219,39 +223,83 @@ function selectEvent(eventIdx) {
 		return;
 	}
 
-	const prevSelectedRow = document.getElementsByClassName("selected-row");
+	unselectEvent();
+
 	const targetRow = document.querySelector('#event-table tbody').childNodes[eventIdx];
 
-	// Remove the 'selected' class from any previously selected row
-	if (prevSelectedRow.length > 0 && prevSelectedRow[0] !== targetRow) {
-		prevSelectedRow[0].classList.remove("selected-row");
-	}
-
 	// Toggle the 'selected' class on the clicked row
-	targetRow.classList.toggle("selected-row");
+	targetRow.classList.add("selected-row");
 
-	if (targetRow.classList.contains("selected-row")) {
-		g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
-		g_selectedEventIdx = eventIdx;
+	g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	g_selectedEventIdx = eventIdx;
+	targetRow.scrollIntoView({behavior: 'smooth', block : 'nearest'});
+}
+
+// unselect the currently selected event
+function unselectEvent() {
+	if (!g_events || g_selectedEventIdx < 0)
+		return;
+
+	const prevSelectedRow = document.querySelector('#event-table tbody').childNodes[g_selectedEventIdx];
+
+	prevSelectedRow.classList.remove("selected-row");
+	g_selectedEventIdx = -1;
+}
+
+function assignLabelToEvent(eventIdx, label) {
+	// clean-up the old label
+	if (g_events[eventIdx].label) {
+		let oldLabel = g_events[eventIdx].label;
+		g_markerMapping[oldLabel].count--;
+		if (g_markerMapping[oldLabel].count == 0)
+			g_markerMapping[oldLabel].marker.setOpacity(1);		// fade in marker of the old label if it is no longer assigned to any event
 	}
-	else
-		g_selectedEventIdx = -1;
+
+	// assign the new label
+	g_events[eventIdx].label = label;
+	g_markerMapping[label].count++;
+	// fade out marker
+	g_markerMapping[label].marker.setOpacity(0.4);
+
+	// put in the label column
+	const eventRow = document.querySelector('#event-table tbody').childNodes[g_selectedEventIdx];
+	if (eventRow)
+		eventRow.childNodes[2].innerHTML = label;		// label is column 2
 }
 
 function onMarkerClick(e) {
 	if (!g_events)
 		return;
+
+	// alt + click function as finding the event(s) that uses this marker as label
+	if (e.originalEvent.altKey) {
+		let label = e.layer.getTooltip().getContent();
+		let start = g_selectedEventIdx + 1;	 // start from next row, or row 0 if nothing is selected
+		for (let offset = 0; offset < g_events.length; offset++) {
+			let eventIdx = (start + offset) % g_events.length;
+			if (g_events[eventIdx].label == label) {
+				selectEvent(eventIdx);
+				return;
+			}
+		}
+		return;
+	}
+
+	// regular clicking assigns the marker to the currently selected event
 	if (g_selectedEventIdx < 0)
 		return;
 
-	const prevSelectedRow = document.getElementsByClassName("selected-row");
-	if (prevSelectedRow.length > 0) {
-		prevSelectedRow[0].childNodes[2].innerHTML = e.layer.getTooltip().getContent();		// fill the marker tooltip (which is the name) in the Label column
-		if (g_selectedEventIdx < g_events.length - 1)
-			selectEvent(g_selectedEventIdx + 1);				// advance to the next row
-		else
-			selectEvent(g_selectedEventIdx);					// or unselect if it's already the last row
-	}
+	// use the marker tooltip (which is the name) as label
+	let label = e.layer.getTooltip().getContent();
+	assignLabelToEvent(g_selectedEventIdx, label)
+
+	// advance to next row
+	if (g_selectedEventIdx < g_events.length - 1)
+		selectEvent(g_selectedEventIdx + 1);				// advance to the next row
+}
+
+function onMarkerDoubleClick(e) {
+	// do nothing, overriden just to prevent map zooming when double clicking
 }
 
 init();

@@ -1,6 +1,8 @@
-var map;
+let g_map;
+let g_markerMapping = {};			// A mapping from marker tooltip string to {marker, count}, where marker is the handle and count is the number of events that this marker is assigned to
+
 function initMap() {
-	map = L.map('map', {
+	g_map = L.map('map', {
 		minZoom: -3,
 		maxZoom: 4,
 		center: [0, 0],
@@ -14,15 +16,15 @@ function initMap() {
 	var h = 5000;  // height of the image
 
 	// Calculate the edges of the image, in coordinates
-	var southWest = map.unproject([-w, h], 0);
-	var northEast = map.unproject([w, -h], 0);
+	var southWest = g_map.unproject([-w, h], 0);
+	var northEast = g_map.unproject([w, -h], 0);
 	var bounds = new L.LatLngBounds(southWest, northEast);
 
-	map.setMaxBounds(bounds);
+	g_map.setMaxBounds(bounds);
 
 	// Add the image overlay 
 	// (replace 'path_to_your_large_image.jpg' with the path to your image file)
-	L.imageOverlay('botw-map.jpg', bounds).addTo(map);
+	L.imageOverlay('botw-map.jpg', bounds).addTo(g_map);
 	logMessage('Loaded map');
 
 	// Set the view to the center of the image
@@ -50,7 +52,7 @@ function initMap() {
 	})
 	.then(data => {
 		// Create a feature group for all markers
-		var markers = L.featureGroup().addTo(map);
+		var markers = L.featureGroup().addTo(g_map);
 
 		for (let k in data){
 			let icon;
@@ -69,14 +71,19 @@ function initMap() {
 			}
 			else
 				continue;
-			L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset}).addTo(markers).bindTooltip(k);
+			let marker = L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset, keyboard: false});
+			marker.addTo(markers).bindTooltip(k);
+			if (g_markerMapping[k])
+				throw 'multiple markers with same name \'' + k + '\'';
+			g_markerMapping[k] = {marker: marker, count: 0};
 		}
 
 		markers.on('click', onMarkerClick);
+		markers.on('dblclick', onMarkerDoubleClick);
 		logMessage('Loaded map elements');
 	})
 	.catch(error => {
-		logMessage('Cannot loaded map elements');
+		logMessage('Cannot loaded map elements' + error);
 	});
 }
 
