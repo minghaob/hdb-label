@@ -35,7 +35,7 @@ async function getFileContent(fileHandle) {
 }
 
 
-function init() {
+function initButton() {
 	const btn = document.getElementById('btn-load');
 
 	btn.addEventListener('click', async () => {
@@ -119,8 +119,8 @@ function init() {
 
 									// If event frame larger then current segment, advance current segment
 									while (eventFrameInFile > runDoc.videos[rawFileIdx].segments[curSeg][1]) {
-										curSeg++;
 										baseFrame += runDoc.videos[rawFileIdx].segments[curSeg][1] - runDoc.videos[rawFileIdx].segments[curSeg][0] + 1;
+										curSeg++;
 										if (curSeg >= runDoc.videos[rawFileIdx].segments.length)		// event frame larger than last segment of video
 											throw ('event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
 									}
@@ -154,11 +154,11 @@ function init() {
 							// insert one row for each event
 							for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
 								const newRow = tbodyEle.insertRow(-1);
-								newRow.insertCell(-1).innerHTML = events[eventIdx].overallFrame;	// frame
-								newRow.insertCell(-1).innerHTML = events[eventIdx].text;			// text
-								newRow.insertCell(-1);												// label
-								newRow.insertCell(-1);												// flags
-								newRow.insertCell(-1);												// comment
+								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrame);	// frame
+								newRow.insertCell(-1).innerHTML = events[eventIdx].text;							// text
+								newRow.insertCell(-1);																// label
+								newRow.insertCell(-1);																// flags
+								newRow.insertCell(-1);																// comment
 							}
 						}
 
@@ -190,13 +190,47 @@ function init() {
 	});
 }
 
+function initTable() {
+	let table = document.getElementById("event-table");
+
+	table.addEventListener("click", function(event) {
+		let target = event.target;
+
+		// Continue only if the clicked element is a TD and its parent is not a THEAD
+		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
+			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
+			selectEvent(targetRow.rowIndex - 1);
+		}
+	});
+}
+
+function init() {
+	initButton();
+	initTable();
+}
+
 function selectEvent(eventIdx) {
+	if (!g_events)
+		return;
+
 	if (eventIdx >= g_events.length || eventIdx < 0) {
 		logMessage('Selecting invalid event index: ' + eventIdx);
 		return;
 	}
 
-	g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	const prevSelectedRow = document.getElementsByClassName("selected-row");
+	const targetRow = document.querySelector('#event-table tbody').childNodes[eventIdx];
+
+	// Remove the 'selected' class from any previously selected row
+	if (prevSelectedRow.length > 0 && prevSelectedRow[0] !== targetRow) {
+		prevSelectedRow[0].classList.remove("selected-row");
+	}
+
+	// Toggle the 'selected' class on the clicked row
+	targetRow.classList.toggle("selected-row");
+
+	if (targetRow.classList.contains("selected-row"))
+		g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
 }
 
 init();

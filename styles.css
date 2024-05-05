@@ -52,22 +52,30 @@ body, html {
 	width: 480px;
 }
 
-table {
+#event-table {
 	width: 100%;
 	border-collapse: collapse;
 	user-select: none;
 	white-space: nowrap;
 }
-th, td {
+#event-table th, td {
 	border: 1px solid #dddddd;
 	text-align: left;
 	padding: 3px;
 	font-size: 12px;
 }
-th {
+#event-table th {
 	background-color: #f2f2f2;
 	font-size: 13px;
 }
-tr:nth-child(even) {
+#event-table tr:nth-child(even) {
 	background-color: #f9f9f9;
+}
+
+#event-table tr td:nth-child(1) {
+    text-align: right;
+}
+
+#event-table tr.selected-row {
+    background-color: coral;
 }
