@@ -1,6 +1,7 @@
 let g_runDoc;
 let g_videos;
 let g_events;
+let g_selectedEventIdx = -1;
 
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
@@ -229,8 +230,28 @@ function selectEvent(eventIdx) {
 	// Toggle the 'selected' class on the clicked row
 	targetRow.classList.toggle("selected-row");
 
-	if (targetRow.classList.contains("selected-row"))
+	if (targetRow.classList.contains("selected-row")) {
 		g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+		g_selectedEventIdx = eventIdx;
+	}
+	else
+		g_selectedEventIdx = -1;
+}
+
+function onMarkerClick(e) {
+	if (!g_events)
+		return;
+	if (g_selectedEventIdx < 0)
+		return;
+
+	const prevSelectedRow = document.getElementsByClassName("selected-row");
+	if (prevSelectedRow.length > 0) {
+		prevSelectedRow[0].childNodes[2].innerHTML = e.layer.getTooltip().getContent();		// fill the marker tooltip (which is the name) in the Label column
+		if (g_selectedEventIdx < g_events.length - 1)
+			selectEvent(g_selectedEventIdx + 1);				// advance to the next row
+		else
+			selectEvent(g_selectedEventIdx);					// or unselect if it's already the last row
+	}
 }
 
 init();

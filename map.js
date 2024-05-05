@@ -49,6 +49,9 @@ function initMap() {
 			return response.json();
 	})
 	.then(data => {
+		// Create a feature group for all markers
+		var markers = L.featureGroup().addTo(map);
+
 		for (let k in data){
 			let icon;
 			let zOffset = 0;
@@ -66,8 +69,10 @@ function initMap() {
 			}
 			else
 				continue;
-			L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset}).addTo(map).bindTooltip(k);
+			L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset}).addTo(markers).bindTooltip(k);
 		}
+
+		markers.on('click', onMarkerClick);
 		logMessage('Loaded map elements');
 	})
 	.catch(error => {
