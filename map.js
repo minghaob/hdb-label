@@ -6,7 +6,7 @@ function initMap() {
 		minZoom: -3,
 		maxZoom: 4,
 		center: [0, 0],
-		zoom: -2,
+		zoom: -3,
 		maxBoundsViscosity: 1,
 		crs: L.CRS.Simple
 	});

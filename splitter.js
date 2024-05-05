@@ -34,7 +34,7 @@ divider.addEventListener('mousedown', function(e) {
         const newRightWidth = container.offsetWidth - newLeftWidth - divider.offsetWidth;
         rightPanel.style.width = `${newRightWidth}px`;
 
-		map.invalidateSize();		// for the leaflet map to resize accordingly
+		g_map.invalidateSize();		// for the leaflet map to resize accordingly
     }
 
     function stopResize() {
