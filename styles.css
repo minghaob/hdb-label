@@ -49,7 +49,7 @@ body, html {
 #table-container{
 	overflow-y: auto;
 	flex-grow: 1;
-	width: 480px;
+	width: 720px;
 }
 
 #event-table {
