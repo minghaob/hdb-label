@@ -201,26 +201,11 @@ function initTable() {
 		// Continue only if the clicked element is a TD and its parent is not a THEAD
 		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
 			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
-			const targetEventidx = targetRow.rowIndex - 1;
-			if (targetEventidx != g_selectedEventIdx)
-				selectEvent(targetEventidx);	// otherwise select it
-		}
-	});
-
-	table.addEventListener("dblclick", function(event) {
-		let target = event.target;
-
-		// Continue only if the clicked element is a TD and its parent is not a THEAD
-		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
-			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
-			const targetEventidx = targetRow.rowIndex - 1;
-			if (g_events[targetEventidx].label) {
-				const marker = g_markerMapping[g_events[targetEventidx].label].marker;
-				if (marker) {
-					g_map.setView(marker.getLatLng(), g_map.getZoom());
-					showHighlightMarker(marker.getLatLng());
-				}
-			}
+			const targetEventIdx = targetRow.rowIndex - 1;
+			if (targetEventIdx != g_selectedEventIdx)
+				selectEvent(targetEventIdx);	// select event if not already 
+			else
+				unselectEvent();				// otherwise unselect it
 		}
 	});
 }
@@ -261,7 +246,7 @@ function init() {
 }
 
 // select a certain event
-function selectEvent(eventIdx) {
+function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	if (!g_events)
 		return;
 
@@ -281,7 +266,18 @@ function selectEvent(eventIdx) {
 	g_activeVideoIdx = g_events[eventIdx].videoFileIdx;
 
 	g_selectedEventIdx = eventIdx;
-	targetRow.scrollIntoView({behavior: 'smooth', block : 'nearest'});
+	targetRow.scrollIntoView({behavior: 'auto', block : 'nearest'});
+
+	if (shouldHighlightMarker) {
+		showHighlightMarker(null);
+		if (g_events[eventIdx].label) {
+			const marker = g_markerMapping[g_events[eventIdx].label].marker;
+			if (marker) {
+				g_map.setView(marker.getLatLng(), g_map.getZoom());
+				showHighlightMarker(marker.getLatLng());
+			}
+		}
+	}
 }
 
 // unselect the currently selected event
@@ -293,6 +289,8 @@ function unselectEvent() {
 
 	prevSelectedRow.classList.remove("selected-row");
 	g_selectedEventIdx = -1;
+
+	showHighlightMarker(null);
 }
 
 function assignLabelToEvent(eventIdx, label) {
@@ -330,7 +328,7 @@ function onMarkerClick(e) {
 		for (let offset = 0; offset < g_events.length; offset++) {
 			let eventIdx = (start + offset) % g_events.length;
 			if (g_events[eventIdx].label == label) {
-				selectEvent(eventIdx);
+				selectEvent(eventIdx, false);		// no need to highlight marker since user is already clicking on it to select the event
 				return;
 			}
 		}
@@ -343,11 +341,14 @@ function onMarkerClick(e) {
 
 	// use the marker tooltip (which is the name) as label
 	let label = e.layer.getTooltip().getContent();
-	assignLabelToEvent(g_selectedEventIdx, label)
+	if (g_markerMapping[label].count == 0 || e.originalEvent.ctrlKey) {
+		// assign label
+		assignLabelToEvent(g_selectedEventIdx, label);
 
-	// advance to next row
-	if (g_selectedEventIdx < g_events.length - 1)
-		selectEvent(g_selectedEventIdx + 1);				// advance to the next row
+		// advance to next row
+		if (g_selectedEventIdx < g_events.length - 1)
+			selectEvent(g_selectedEventIdx + 1);
+	}
 }
 
 function onMarkerDoubleClick(e) {

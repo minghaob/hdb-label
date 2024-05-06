@@ -83,9 +83,8 @@ function initMap() {
 		markers.on('dblclick', onMarkerDoubleClick);
 
 		g_map.on('click', function(e) {
-			if (g_highlightMarker) {
+			if (g_highlightMarker)
 				g_map.removeLayer(g_highlightMarker);
-			}
 		});
 		logMessage('Loaded map elements');
 	})
@@ -95,8 +94,14 @@ function initMap() {
 }
 
 function showHighlightMarker(latLng) {
+	if (!latLng) {
+		if (g_highlightMarker)
+			g_map.removeLayer(g_highlightMarker);
+		return;
+	}
+
 	if (!g_highlightMarker)
-		g_highlightMarker= L.marker(latLng, {keyboard: false});
+		g_highlightMarker= L.marker(latLng, {zIndexOffset : 20000, keyboard: false});
 	else
 		g_highlightMarker.setLatLng(latLng);
 	g_highlightMarker.addTo(g_map);
