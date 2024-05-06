@@ -1,5 +1,6 @@
 let g_map;
 let g_markerMapping = {};			// A mapping from marker tooltip string to {marker, count}, where marker is the handle and count is the number of events that this marker is assigned to
+let g_highlightMarker;
 
 function initMap() {
 	g_map = L.map('map', {
@@ -80,11 +81,25 @@ function initMap() {
 
 		markers.on('click', onMarkerClick);
 		markers.on('dblclick', onMarkerDoubleClick);
+
+		g_map.on('click', function(e) {
+			if (g_highlightMarker) {
+				g_map.removeLayer(g_highlightMarker);
+			}
+		});
 		logMessage('Loaded map elements');
 	})
 	.catch(error => {
 		logMessage('Cannot loaded map elements' + error);
 	});
+}
+
+function showHighlightMarker(latLng) {
+	if (!g_highlightMarker)
+		g_highlightMarker= L.marker(latLng, {keyboard: false});
+	else
+		g_highlightMarker.setLatLng(latLng);
+	g_highlightMarker.addTo(g_map);
 }
 
 initMap();

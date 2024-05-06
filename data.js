@@ -2,6 +2,7 @@ let g_runDoc;
 let g_videos;
 let g_events;
 let g_selectedEventIdx = -1;
+let g_activeVideoIdx = -1;
 
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
@@ -200,17 +201,63 @@ function initTable() {
 		// Continue only if the clicked element is a TD and its parent is not a THEAD
 		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
 			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
-			if (targetRow.rowIndex - 1 == g_selectedEventIdx)
-				unselectEvent();						// clicking the selected event row unselects it
-			else
-				selectEvent(targetRow.rowIndex - 1);	// otherwise select it
+			const targetEventidx = targetRow.rowIndex - 1;
+			if (targetEventidx != g_selectedEventIdx)
+				selectEvent(targetEventidx);	// otherwise select it
 		}
 	});
+
+	table.addEventListener("dblclick", function(event) {
+		let target = event.target;
+
+		// Continue only if the clicked element is a TD and its parent is not a THEAD
+		if (target.tagName === "TD" && target.parentNode.parentNode.tagName !== 'THEAD') {
+			const targetRow = target.parentNode; // Get the parent row (tr) of the clicked cell (td)
+			const targetEventidx = targetRow.rowIndex - 1;
+			if (g_events[targetEventidx].label) {
+				const marker = g_markerMapping[g_events[targetEventidx].label].marker;
+				if (marker) {
+					g_map.setView(marker.getLatLng(), g_map.getZoom());
+					showHighlightMarker(marker.getLatLng());
+				}
+			}
+		}
+	});
+}
+
+function seekVideo(offset) {
+	if (g_videos && g_activeVideoIdx >= 0 && g_activeVideoIdx < g_videos.length)
+		g_videos[g_activeVideoIdx].currentTime += offset;
 }
 
 function init() {
 	initButton();
 	initTable();
+
+	document.getElementById('rewind_20s').addEventListener('click', async () => {
+		seekVideo(-20);
+	});
+	document.getElementById('rewind_5s').addEventListener('click', async () => {
+		seekVideo(-5);
+	});
+	document.getElementById('rewind_1s').addEventListener('click', async () => {
+		seekVideo(-1);
+	});
+	document.getElementById('rewind_0.2s').addEventListener('click', async () => {
+		seekVideo(-0.2);
+	});
+	document.getElementById('forward_0.2s').addEventListener('click', async () => {
+		seekVideo(0.2);
+	});
+	document.getElementById('forward_1s').addEventListener('click', async () => {
+		seekVideo(1);
+	});
+	document.getElementById('forward_5s').addEventListener('click', async () => {
+		seekVideo(5);
+	});
+	document.getElementById('forward_20s').addEventListener('click', async () => {
+		seekVideo(20);
+	});
 }
 
 // select a certain event
@@ -231,6 +278,8 @@ function selectEvent(eventIdx) {
 	targetRow.classList.add("selected-row");
 
 	g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	g_activeVideoIdx = g_events[eventIdx].videoFileIdx;
+
 	g_selectedEventIdx = eventIdx;
 	targetRow.scrollIntoView({behavior: 'smooth', block : 'nearest'});
 }
@@ -250,21 +299,24 @@ function assignLabelToEvent(eventIdx, label) {
 	// clean-up the old label
 	if (g_events[eventIdx].label) {
 		let oldLabel = g_events[eventIdx].label;
-		g_markerMapping[oldLabel].count--;
-		if (g_markerMapping[oldLabel].count == 0)
-			g_markerMapping[oldLabel].marker.setOpacity(1);		// fade in marker of the old label if it is no longer assigned to any event
+		if (g_markerMapping.hasOwnProperty(oldLabel)) {
+			g_markerMapping[oldLabel].count--;
+			if (g_markerMapping[oldLabel].count == 0)
+				g_markerMapping[oldLabel].marker.setOpacity(1);		// fade in marker of the old label if it is no longer assigned to any event
+		}
 	}
 
 	// assign the new label
 	g_events[eventIdx].label = label;
-	g_markerMapping[label].count++;
-	// fade out marker
-	g_markerMapping[label].marker.setOpacity(0.4);
+	if (g_markerMapping.hasOwnProperty(label)) {
+		g_markerMapping[label].count++;
+		g_markerMapping[label].marker.setOpacity(0.4);		// fade out marker
+	}
 
 	// put in the label column
-	const eventRow = document.querySelector('#event-table tbody').childNodes[g_selectedEventIdx];
+	const eventRow = document.querySelector('#event-table tbody').childNodes[eventIdx];
 	if (eventRow)
-		eventRow.childNodes[2].innerHTML = label;		// label is column 2
+		eventRow.childNodes[2].innerHTML = label;			// label is column 2
 }
 
 function onMarkerClick(e) {
