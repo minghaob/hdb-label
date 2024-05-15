@@ -1,8 +1,16 @@
-let g_runDoc;
+let g_runDoc;			// object loaded from run.yaml
 let g_videos;
-let g_events;
+let g_events;			// .overallFrame:	baseFrame + eventFrameInFile - runDoc.videos[rawFileIdx].segments[curSeg][0],
+						// .text:			rawDoc.events[eventIdx][1],
+						// .videoFileIdx:	rawFileIdx,
+						// .frameInFile:	eventFrameInFile,
+						// .label:			assigned label, e.g. "Z03", "Mogg Latan Shrine", "Ridgeland Tower"
+						// .sublabel:		[NOT YET IMPLEMENTED] assigned sublabel, e.g. "Enter Shrine"
+						// .flag:			[NOT YET IMPLEMENTED] e.g. "KilledTalus", "GotLocation"
+						// .comment:		[NOT YET IMPLEMENTED]
 let g_selectedEventIdx = -1;
 let g_activeVideoIdx = -1;
+let g_folderHandle;
 
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
@@ -36,8 +44,84 @@ async function getFileContent(fileHandle) {
     }
 }
 
+async function getFileHandle(directoryHandle, filename) {
+    try {
+        // Get a file handle with read/write permission
+        const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
+        return fileHandle;
+    } catch (error) {
+        console.error('Error getting file handle:', error);
+        return null;
+    }
+}
+async function writeFile(fileHandle, contents) {
+    try {
+        // Create a writable stream
+        const writable = await fileHandle.createWritable();
+        // Write the contents to the file
+        await writable.write(contents);
+        // Close the writable stream
+        await writable.close();
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
 
-function initButton() {
+async function writeToFile(folderHandle, filename, contents) {
+	if (!folderHandle)
+		return false;
+
+	try {
+		const fileHandle = await getFileHandle(folderHandle, filename);
+		if (fileHandle) {
+			const result = await writeFile(fileHandle, contents);
+			return result;
+		}
+		return false;
+	} catch (error) {
+		return false;
+	}
+}
+
+async function loadSavedFile() {
+	let fileHandle;
+	try {
+		fileHandle = await g_folderHandle.getFileHandle(g_runDoc.uid + '.yaml', { create: false });
+	}
+	catch (error) {
+		return;
+	}
+
+	try {
+		const content = await getFileContent(fileHandle);
+		let wipDoc = jsyaml.load(content);
+		if (!Array.isArray(wipDoc.events))
+			throw (g_runDoc.uid + '.yaml' + ' does not have valid events property');
+		let gEventIdx = 0;
+		let numLoadedEvents = 0;
+		for (let eventIdx = 0; eventIdx < wipDoc.events.length; eventIdx++) {
+			while (gEventIdx < g_events.length && g_events[gEventIdx].overallFrame < wipDoc.events[eventIdx].frame)
+				gEventIdx++;
+			if (gEventIdx >= g_events.length)
+				break;
+			if (g_events[gEventIdx].overallFrame == wipDoc.events[eventIdx].frame) {
+				assignLabelToEvent(gEventIdx, wipDoc.events[eventIdx].label);
+				numLoadedEvents++;
+			}
+		}
+
+		let msg = 'Loaded ' + numLoadedEvents + ' event data from ' + g_runDoc.uid + '.yaml';
+		if (numLoadedEvents != wipDoc.events.length)
+			msg += ' (' + wipDoc.events.length - numLoadedEvents + ' ignored)';
+		logMessage(msg);
+
+	} catch (error) {
+		logMessage(error);
+	}
+}
+
+function initLoadButton() {
 	const btn = document.getElementById('btn-load');
 
 	btn.addEventListener('click', async () => {
@@ -50,7 +134,6 @@ function initButton() {
 				const fileHandle = await folderHandle.getFileHandle('run.yaml', { create: false });
 				const content = await getFileContent(fileHandle);
 				runDoc = jsyaml.load(content);
-				//console.log(runDoc);
 				if (!runDoc.uid)
 					throw ('Missing uid in run.yaml');
 				if (!runDoc.videos || !Array.isArray(runDoc.videos))
@@ -112,7 +195,7 @@ function initButton() {
 								let fileName = 'raw_' + (rawFileIdx + 1).toString().padStart(2, '0') + '.yaml';		// raw files has filename numbered from 1 instead of 0
 								const fileHandle = await folderHandle.getFileHandle(fileName, { create: false });
 								const content = await getFileContent(fileHandle);
-								rawDoc = jsyaml.load(content);
+								let rawDoc = jsyaml.load(content);
 								if (!Array.isArray(rawDoc.events))
 									throw (fileName + ' does not have valid events property');
 								let curSeg = 0;
@@ -170,6 +253,9 @@ function initButton() {
 						g_videos = videos;
 						g_runDoc = runDoc;
 						g_events = events;
+						g_folderHandle = folderHandle;
+
+						loadSavedFile();
 
 						selectEvent(0);
 					}
@@ -190,6 +276,58 @@ function initButton() {
 		 	logMessage('Error loading run: ' + error);
 		}
 	});
+}
+
+function initSaveButton() {
+	const btn = document.getElementById('btn-save');
+
+	btn.addEventListener('click', async () => {
+		if (!g_folderHandle || !g_runDoc || !g_events)
+			return;
+
+		let saveObj = {};		// object to be written to output file
+
+		// metadata from loaded run.yaml
+		saveObj.uid = g_runDoc.uid;
+		if (g_runDoc.runner)
+			saveObj.runner = g_runDoc.runner;
+		if (g_runDoc.src_id)
+			saveObj.src_id = g_runDoc.src_id;
+		saveObj.videos = [];
+		for (let i = 0; i < g_runDoc.videos.length; i++) {
+			let curVideo = {};
+			if (g_runDoc.videos[i].remote)
+				curVideo.remote = g_runDoc.videos[i].remote;
+			curVideo.segments = g_runDoc.videos[i].segments;
+			saveObj.videos.push(curVideo);
+		}
+
+		// in-memory event data
+		saveObj.events = [];
+		for (let i = 0; i < g_events.length; i++) {
+			if (g_events[i].label) {				// only included events that already have label assigned
+				let curEvent = {};
+				curEvent.frame = g_events[i].overallFrame;
+				curEvent.label = g_events[i].label;
+				if (g_events[i].sublabel)
+					curEvent.sublabel = g_events[i].sublabel;
+				if (g_events[i].flag)
+					curEvent.flag = g_events[i].flag;
+				if (g_events[i].comment)
+					curEvent.comment = g_events[i].comment;
+				saveObj.events.push(curEvent);
+			}
+		}
+		let content = jsyaml.dump(saveObj);
+		if (await writeToFile(g_folderHandle, saveObj.uid + '.yaml', content)) {
+			logMessage('Saved to ' + saveObj.uid + '.yaml');
+		}
+	});
+}
+
+function initButtons() {
+	initLoadButton();
+	initSaveButton();
 }
 
 function initTable() {
@@ -216,7 +354,7 @@ function seekVideo(offset) {
 }
 
 function init() {
-	initButton();
+	initButtons();
 	initTable();
 
 	document.getElementById('rewind_20s').addEventListener('click', async () => {
@@ -321,7 +459,7 @@ function onMarkerClick(e) {
 	if (!g_events)
 		return;
 
-	// alt + click function as finding the event(s) that uses this marker as label
+	// alt + click functions as finding the event(s) that uses this marker as label
 	if (e.originalEvent.altKey) {
 		let label = e.layer.getTooltip().getContent();
 		let start = g_selectedEventIdx + 1;	 // start from next row, or row 0 if nothing is selected
