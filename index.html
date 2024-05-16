@@ -31,12 +31,16 @@
 					ctx.fillText("Video Frame",canvas.width / 2, canvas.height / 2);
 				}
 			</script>
-			<div style="padding-top: 5px; padding-bottom: 10px;">
+			<div id="button-container" style="padding-top: 5px; padding-bottom: 10px; display: flex; justify-content: space-between;">
 				<div style="float: left;">
 					<button id="rewind_20s" title="Q">&#60; 20s</button>
 					<button id="rewind_5s" title="Shift + Q">&#60; 5s</button>
 					<button id="rewind_1s" title="A">&#60; 1s</button>
 					<button id="rewind_0.2s" title="Shift + A">&#60; 0.2s</button>
+				</div>
+				<div>
+					<button id="btn-mute" title="M">🔇</button>
+					<button id="btn-play" title="P">▶️</button>
 				</div>
 				<div style="float: right;">
 					<button id="forward_0.2s" title="Shift + D">&#62; 0.2s</button>

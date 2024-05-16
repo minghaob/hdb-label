@@ -39,6 +39,12 @@ document.addEventListener('keydown', function(event) {
 		else
 			seekVideo(20);
 	}
+	else if (event.code == 'KeyM') {
+		clickMute();
+	}
+	else if (event.code == 'KeyP') {
+		clickPlay();
+	}
 	else if (event.code == 'Delete') {
 		if (g_events && g_selectedEventIdx >= 0 && g_selectedEventIdx < g_events.length) {
 			assignLabelToEvent(g_selectedEventIdx, null);
@@ -50,7 +56,4 @@ document.addEventListener('keydown', function(event) {
 			selectEvent(g_selectedEventIdx - 1);
 		}
 	}
-
-    // Log the key for demonstration; replace this with your actual functionality
-    //console.log("Key pressed: " + event.key + " (Code: " + event.code + ")");
 });

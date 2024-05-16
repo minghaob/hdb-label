@@ -79,3 +79,27 @@ body, html {
 #event-table tr.selected-row {
     background-color: coral;
 }
+
+#button-container {
+	user-select: none;
+}
+
+#button-container button {
+	user-select: none;
+    font-family: 'Arial', sans-serif;
+    font-size: 15px;
+    height: 22px;
+    border: none;
+    border-radius: 3px;
+    background-color: darkgray;
+    color: white;
+    cursor: pointer;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#button-container button:hover {
+    background-color: gray;
+}

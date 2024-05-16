@@ -11,6 +11,7 @@ let g_events;			// .overallFrame:	baseFrame + eventFrameInFile - runDoc.videos[r
 let g_selectedEventIdx = -1;
 let g_activeVideoIdx = -1;
 let g_folderHandle;
+let g_playing = false;
 
 function readFileContent(file) {
     return new Promise((resolve, reject) => {
@@ -261,6 +262,7 @@ function initLoadButton() {
 					}
 				});
 
+				video.muted = true;			// mute videos by default
 				video.addEventListener('seeked', () => {
 					if (canvas.width != video.videoWidth)
 						canvas.width = video.videoWidth;
@@ -269,6 +271,18 @@ function initLoadButton() {
 
 					canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
 				});
+				video.addEventListener('play', () => {
+					if (video == g_videos[g_activeVideoIdx]) {
+						document.getElementById('btn-play').innerHTML = '⏸️';
+						g_playing = true;
+					}
+				});
+				video.addEventListener('pause', () => {
+					if (video == g_videos[g_activeVideoIdx]) {
+						document.getElementById('btn-play').innerHTML = '▶️';
+						g_playing = false;
+					}
+				});
 
 				videos.push(video);
 			}
@@ -276,6 +290,23 @@ function initLoadButton() {
 		 	logMessage('Error loading run: ' + error);
 		}
 	});
+}
+
+function drawVideo() {
+	if (g_videos && g_activeVideoIdx >= 0) {
+		const video = g_videos[g_activeVideoIdx];
+		if (video.paused === false) {
+			const canvas = document.getElementById('video-frame');
+			const canvasContext = canvas.getContext('2d');
+			if (canvas.width != video.videoWidth)
+				canvas.width = video.videoWidth;
+			if (canvas.height != video.videoHeight)
+				canvas.height = video.videoHeight;
+
+			canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+		}
+	}
+	requestAnimationFrame(() => drawVideo());
 }
 
 function initSaveButton() {
@@ -325,9 +356,57 @@ function initSaveButton() {
 	});
 }
 
+async function clickMute(event) {
+	if (g_events && g_videos) {
+		for (let i = 0; i < g_videos.length; i++)
+			g_videos[i].muted = !g_videos[i].muted;
+		document.getElementById('btn-mute').innerHTML = g_videos[g_activeVideoIdx].muted ? '🔇':'🔊';
+	}
+}
+
+async function clickPlay(event) {
+	if (g_events && g_videos) {
+		if (g_playing) {
+			g_videos[g_activeVideoIdx].pause();
+		}
+		else {
+			g_videos[g_activeVideoIdx].play();
+		}
+	}
+}
+
 function initButtons() {
 	initLoadButton();
 	initSaveButton();
+
+	document.getElementById('rewind_20s').addEventListener('click', async () => {
+		seekVideo(-20);
+	});
+	document.getElementById('rewind_5s').addEventListener('click', async () => {
+		seekVideo(-5);
+	});
+	document.getElementById('rewind_1s').addEventListener('click', async () => {
+		seekVideo(-1);
+	});
+	document.getElementById('rewind_0.2s').addEventListener('click', async () => {
+		seekVideo(-0.2);
+	});
+	document.getElementById('forward_0.2s').addEventListener('click', async () => {
+		seekVideo(0.2);
+	});
+	document.getElementById('forward_1s').addEventListener('click', async () => {
+		seekVideo(1);
+	});
+	document.getElementById('forward_5s').addEventListener('click', async () => {
+		seekVideo(5);
+	});
+	document.getElementById('forward_20s').addEventListener('click', async () => {
+		seekVideo(20);
+	});
+
+	document.getElementById('btn-mute').addEventListener('click', clickMute);
+
+	document.getElementById('btn-play').addEventListener('click', clickPlay);
 }
 
 function initTable() {
@@ -356,31 +435,7 @@ function seekVideo(offset) {
 function init() {
 	initButtons();
 	initTable();
-
-	document.getElementById('rewind_20s').addEventListener('click', async () => {
-		seekVideo(-20);
-	});
-	document.getElementById('rewind_5s').addEventListener('click', async () => {
-		seekVideo(-5);
-	});
-	document.getElementById('rewind_1s').addEventListener('click', async () => {
-		seekVideo(-1);
-	});
-	document.getElementById('rewind_0.2s').addEventListener('click', async () => {
-		seekVideo(-0.2);
-	});
-	document.getElementById('forward_0.2s').addEventListener('click', async () => {
-		seekVideo(0.2);
-	});
-	document.getElementById('forward_1s').addEventListener('click', async () => {
-		seekVideo(1);
-	});
-	document.getElementById('forward_5s').addEventListener('click', async () => {
-		seekVideo(5);
-	});
-	document.getElementById('forward_20s').addEventListener('click', async () => {
-		seekVideo(20);
-	});
+	drawVideo();
 }
 
 // select a certain event
@@ -400,8 +455,14 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	// Toggle the 'selected' class on the clicked row
 	targetRow.classList.add("selected-row");
 
-	g_videos[g_events[eventIdx].videoFileIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	let oldVideoIdx = g_activeVideoIdx;
 	g_activeVideoIdx = g_events[eventIdx].videoFileIdx;
+	g_videos[g_activeVideoIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	if (oldVideoIdx != g_activeVideoIdx && oldVideoIdx >= 0) {
+		g_videos[oldVideoIdx].pause();
+		if (g_playing)
+			g_videos[g_activeVideoIdx].play();
+	}
 
 	g_selectedEventIdx = eventIdx;
 	targetRow.scrollIntoView({behavior: 'auto', block : 'nearest'});
