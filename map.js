@@ -26,10 +26,6 @@ function initMap() {
 	// Add the image overlay 
 	// (replace 'path_to_your_large_image.jpg' with the path to your image file)
 	L.imageOverlay('botw-map.jpg', bounds).addTo(g_map);
-	logMessage('Loaded map');
-
-	// Set the view to the center of the image
-	// map.fitBounds(bounds);
 
 	var korokIcon = L.icon({
 		iconUrl: 'icons/korok.png',
@@ -89,7 +85,7 @@ function initMap() {
 		logMessage('Loaded map elements');
 	})
 	.catch(error => {
-		logMessage('Cannot loaded map elements' + error);
+		logMessage('Cannot load map elements' + error);
 	});
 }
 
