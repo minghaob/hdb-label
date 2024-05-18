@@ -202,16 +202,17 @@ function initLoadButton() {
 								let curSeg = 0;
 								for (let eventIdx = 0; eventIdx < rawDoc.events.length; eventIdx++) {
 									let eventFrameInFile = rawDoc.events[eventIdx][0];
-
+									if (eventIdx > 0 && eventFrameInFile <= rawDoc.events[eventIdx - 1][0])
+										throw (fileName + ': event frame ' + eventFrameInFile + ' not larger than previous event frame');
 									// If event frame larger then current segment, advance current segment
 									while (eventFrameInFile > runDoc.videos[rawFileIdx].segments[curSeg][1]) {
 										baseFrame += runDoc.videos[rawFileIdx].segments[curSeg][1] - runDoc.videos[rawFileIdx].segments[curSeg][0] + 1;
 										curSeg++;
 										if (curSeg >= runDoc.videos[rawFileIdx].segments.length)		// event frame larger than last segment of video
-											throw ('event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
+											throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
 									}
 									if (rawDoc.events[eventIdx][0] < runDoc.videos[rawFileIdx].segments[curSeg][0])		// event frame smaller than current segment, indicating that it's between the current segment and last segment
-										throw ('event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
+										throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
 									events.push({
 										'overallFrame': baseFrame + eventFrameInFile - runDoc.videos[rawFileIdx].segments[curSeg][0],
 										'text': rawDoc.events[eventIdx][1],
@@ -227,6 +228,7 @@ function initLoadButton() {
 							}
 						} catch (error) {
 							logMessage('Error loading run: ' + error);
+							return;
 						}
 
 						// feed collected events to event table
