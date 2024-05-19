@@ -479,6 +479,19 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 			}
 		}
 	}
+
+	if (g_selectedEventIdx == 0) {
+		guideLabel("");
+		g_map.fitBounds(g_guideLines.getBounds(), { maxZoom : g_map.getZoom() });
+	}
+	else if (g_selectedEventIdx > 0) {
+		if (g_events[g_selectedEventIdx - 1].label) {
+			guideLabel(g_events[g_selectedEventIdx - 1].label);
+			g_map.fitBounds(g_guideLines.getBounds(), { maxZoom : g_map.getZoom() });
+		}
+		else
+			guideLabel(null);
+	}
 }
 
 // unselect the currently selected event
@@ -492,6 +505,7 @@ function unselectEvent() {
 	g_selectedEventIdx = -1;
 
 	showHighlightMarker(null);
+	guideLabel(null);
 }
 
 function assignLabelToEvent(eventIdx, label) {

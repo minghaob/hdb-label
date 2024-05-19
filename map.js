@@ -1,6 +1,7 @@
 let g_map;
 let g_markerMapping = {};			// A mapping from marker tooltip string to {marker, count}, where marker is the handle and count is the number of events that this marker is assigned to
 let g_highlightMarker;
+let g_guideLines;
 
 function initMap() {
 	g_map = L.map('map', {
@@ -87,6 +88,8 @@ function initMap() {
 	.catch(error => {
 		logMessage('Cannot load map elements' + error);
 	});
+
+	g_guideLines = L.featureGroup().addTo(g_map);
 }
 
 function showHighlightMarker(latLng) {
@@ -101,6 +104,53 @@ function showHighlightMarker(latLng) {
 	else
 		g_highlightMarker.setLatLng(latLng);
 	g_highlightMarker.addTo(g_map);
+}
+
+function guideLabel(label) {
+	if (!g_guideLines)
+		return;
+
+	g_guideLines.clearLayers();
+
+	if (label === null)
+		return;
+
+	// if there's a runner, use runner's previous runs
+	let markovMove = (g_runDoc.runner && g_runDoc.runner.length > 0) ? g_runner1OrderMarkovMove[g_runDoc.runner] : null;
+	// otherwise use all community runs
+	if (!markovMove)
+		markovMove = g_commu1OrderMarkovMove;
+	if (!markovMove)
+		return;
+
+	const entry = markovMove[label];			// label could also be an empty string which indicates that it's the first move of the run, markovMove should have a corresponding entry
+	if (!entry)
+		return;
+
+	let latLngs = [[],[]];
+	if (label.length == 0)
+		latLngs[0] = g_markerMapping["P09"].marker.getLatLng();		// empty label means it's the first move of the run, which is starting at SoR. P09 has the same coordinates as SoR.
+	else {
+		if (!g_markerMapping[label])
+			return;
+		latLngs[0] = g_markerMapping[label].marker.getLatLng();
+	}
+
+	for (const [index, move] of entry.next.entries()) {
+		latLngs[1] = g_markerMapping[move.label].marker.getLatLng();
+		let antPath = L.polyline.antPath(latLngs, {
+			"delay": 100,
+			"dashArray": [
+				10,
+				30
+			],
+			"weight": 5,
+			"color": "#0000FF",
+			"pulseColor": "#FFFFFF",
+			"hardwareAccelerated" : true
+		}).addTo(g_guideLines);
+		antPath.bindTooltip('[' + (index + 1)  + '] ' + move.label + ' (' + (move.count * 100 / entry.totalCount) + "%)", {permanent : true});
+	}
 }
 
 initMap();
