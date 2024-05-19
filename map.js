@@ -70,7 +70,7 @@ function initMap() {
 			else
 				continue;
 			let marker = L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset, keyboard: false});
-			marker.addTo(markers).bindTooltip(k);
+			marker.addTo(markers).bindTooltip(k, { className : 'no-background-tooltip' });
 			if (g_markerMapping[k])
 				throw 'multiple markers with same name \'' + k + '\'';
 			g_markerMapping[k] = {marker: marker, count: 0};
@@ -106,11 +106,14 @@ function showHighlightMarker(latLng) {
 	g_highlightMarker.addTo(g_map);
 }
 
+let g_shortcutLabels = [];
+
 function guideLabel(label) {
 	if (!g_guideLines)
 		return;
 
 	g_guideLines.clearLayers();
+	g_shortcutLabels.length = 0;
 
 	if (label === null)
 		return;
@@ -137,11 +140,13 @@ function guideLabel(label) {
 	}
 
 	for (const [index, move] of entry.next.entries()) {
+		if (index >= 9)		// only take the first 9 variations 
+			break;
 		latLngs[1] = g_markerMapping[move.label].marker.getLatLng();
 		let antPath = L.polyline.antPath(latLngs, {
 			"delay": 100,
 			"dashArray": [
-				10,
+				15,
 				30
 			],
 			"weight": 5,
@@ -149,8 +154,15 @@ function guideLabel(label) {
 			"pulseColor": "#FFFFFF",
 			"hardwareAccelerated" : true
 		}).addTo(g_guideLines);
-		antPath.bindTooltip('[' + (index + 1)  + '] ' + move.label + ' (' + (move.count * 100 / entry.totalCount) + "%)", {permanent : true});
+		antPath.bindTooltip('[<span style="color:gold;font-weight:bold">' + (index + 1)  + '</span>] ' + move.label + ' (<span style="color:salmon">' + (move.count * 100 / entry.totalCount) + "%</span>)", { permanent : true, className : 'no-background-tooltip' });
+		g_shortcutLabels.push(move.label);
 	}
 }
 
+function shortcutAssignLabel(idx) {
+	if (idx < 1 || idx > g_shortcutLabels.length)
+		return;
+
+	assignLabelToSelectedEvent(g_shortcutLabels[idx - 1]);
+}
 initMap();

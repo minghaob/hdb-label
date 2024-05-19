@@ -469,12 +469,15 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	g_selectedEventIdx = eventIdx;
 	targetRow.scrollIntoView({behavior: 'auto', block : 'nearest'});
 
+	var bounds = new L.LatLngBounds();
+
 	if (shouldHighlightMarker) {
 		showHighlightMarker(null);
 		if (g_events[eventIdx].label) {
 			const marker = g_markerMapping[g_events[eventIdx].label].marker;
 			if (marker) {
 				g_map.setView(marker.getLatLng(), g_map.getZoom());
+				bounds.extend(marker.getLatLng());
 				showHighlightMarker(marker.getLatLng());
 			}
 		}
@@ -482,12 +485,16 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 
 	if (g_selectedEventIdx == 0) {
 		guideLabel("");
-		g_map.fitBounds(g_guideLines.getBounds(), { maxZoom : g_map.getZoom() });
+		bounds.extend(g_guideLines.getBounds());
+		if (shouldHighlightMarker)
+			g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 	}
 	else if (g_selectedEventIdx > 0) {
 		if (g_events[g_selectedEventIdx - 1].label) {
 			guideLabel(g_events[g_selectedEventIdx - 1].label);
-			g_map.fitBounds(g_guideLines.getBounds(), { maxZoom : g_map.getZoom() });
+			bounds.extend(g_guideLines.getBounds());
+			if (shouldHighlightMarker)
+				g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 		}
 		else
 			guideLabel(null);
@@ -530,6 +537,10 @@ function assignLabelToEvent(eventIdx, label) {
 	const eventRow = document.querySelector('#event-table tbody').childNodes[eventIdx];
 	if (eventRow)
 		eventRow.childNodes[2].innerHTML = label;			// label is column 2
+
+	// hide highlight marker if needed
+	if (eventIdx == g_selectedEventIdx && label == null)
+		showHighlightMarker(null);
 }
 
 function onMarkerClick(e) {
@@ -550,19 +561,26 @@ function onMarkerClick(e) {
 		return;
 	}
 
+	let label = e.layer.getTooltip().getContent();
+
 	// regular clicking assigns the marker to the currently selected event
+	assignLabelToSelectedEvent(label, e.originalEvent.ctrlKey);			// force assign when ctrl is pressed
+}
+
+function assignLabelToSelectedEvent(label, forceAssign = false) {
 	if (g_selectedEventIdx < 0)
 		return;
 
-	// use the marker tooltip (which is the name) as label
-	let label = e.layer.getTooltip().getContent();
-	if (g_markerMapping[label].count == 0 || e.originalEvent.ctrlKey) {
+	// prevent assigning a marker that is already assigned, unless forceAssign is true
+	if (g_markerMapping[label].count == 0 || forceAssign) {
 		// assign label
 		assignLabelToEvent(g_selectedEventIdx, label);
 
 		// advance to next row
 		if (g_selectedEventIdx < g_events.length - 1)
 			selectEvent(g_selectedEventIdx + 1);
+		else
+			unselectEvent();
 	}
 }
 

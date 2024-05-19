@@ -103,3 +103,22 @@ body, html {
 #button-container button:hover {
     background-color: gray;
 }
+
+.no-background-tooltip {
+    background: transparent;      /* Make background transparent */
+    border: none;                 /* Remove border */
+    box-shadow: none;             /* Remove shadow */
+    text-shadow: 1px 1px black, 1px -1px  black, -1px 1px black, -1px -1px black;
+    color: white; /* Set text color */
+    font-size: 12px; /* Set font size */
+    font-family: Arial, sans-serif;
+}
+
+.no-background-tooltip::before { /* Remove the tooltip arrow */
+    border: none;
+}
+
+/* Additional style adjustments if needed */
+.no-background-tooltip .leaflet-tooltip-content {
+    padding: 0; /* Remove padding */
+}

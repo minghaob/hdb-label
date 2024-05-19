@@ -56,4 +56,22 @@ document.addEventListener('keydown', function(event) {
 			selectEvent(g_selectedEventIdx - 1);
 		}
 	}
+	else if (event.code == 'Digit1')
+		shortcutAssignLabel(1);
+	else if (event.code == 'Digit2')
+		shortcutAssignLabel(2);
+	else if (event.code == 'Digit3')
+		shortcutAssignLabel(3);
+	else if (event.code == 'Digit4')
+		shortcutAssignLabel(4);
+	else if (event.code == 'Digit5')
+		shortcutAssignLabel(5);
+	else if (event.code == 'Digit6')
+		shortcutAssignLabel(6);
+	else if (event.code == 'Digit7')
+		shortcutAssignLabel(7);
+	else if (event.code == 'Digit8')
+		shortcutAssignLabel(8);
+	else if (event.code == 'Digit9')
+		shortcutAssignLabel(9);
 });
