@@ -154,7 +154,8 @@ function guideLabel(label) {
 			"pulseColor": "#FFFFFF",
 			"hardwareAccelerated" : true
 		}).addTo(g_guideLines);
-		antPath.bindTooltip('[<span style="color:gold;font-weight:bold">' + (index + 1)  + '</span>] ' + move.label + ' (<span style="color:salmon">' + (move.count * 100 / entry.totalCount) + "%</span>)", { permanent : true, className : 'no-background-tooltip' });
+		antPath.bindTooltip('[<span style="color:gold;font-weight:bold">' + (index + 1)  + '</span>] ' + move.label + ' (<span style="color:salmon">' + (move.count * 100 / entry.totalCount) + "%</span>)",
+			 { permanent : true, className : 'no-background-tooltip', direction: 'center' });
 		g_shortcutLabels.push(move.label);
 	}
 }
