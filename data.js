@@ -484,14 +484,14 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	}
 
 	if (g_selectedEventIdx == 0) {
-		guideLabel("");
+		guideLabel("", RunEventType.fromText(g_events[g_selectedEventIdx].text));
 		bounds.extend(g_guideLines.getBounds());
 		if (shouldHighlightMarker)
 			g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 	}
 	else if (g_selectedEventIdx > 0) {
 		if (g_events[g_selectedEventIdx - 1].label) {
-			guideLabel(g_events[g_selectedEventIdx - 1].label);
+			guideLabel(g_events[g_selectedEventIdx - 1].label, RunEventType.fromText(g_events[g_selectedEventIdx].text));
 			bounds.extend(g_guideLines.getBounds());
 			if (shouldHighlightMarker)
 				g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });

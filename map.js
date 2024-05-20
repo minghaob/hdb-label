@@ -108,7 +108,7 @@ function showHighlightMarker(latLng) {
 
 let g_shortcutLabels = [];
 
-function guideLabel(label) {
+function guideLabel(label, expectedNextEventType = null) {
 	if (!g_guideLines)
 		return;
 
@@ -139,10 +139,18 @@ function guideLabel(label) {
 		latLngs[0] = g_markerMapping[label].marker.getLatLng();
 	}
 
-	for (const [index, move] of entry.next.entries()) {
-		if (index >= 9)		// only take the first 9 variations 
-			break;
+	for (const move of entry.next) {
 		latLngs[1] = g_markerMapping[move.label].marker.getLatLng();
+
+		let tooltip = '';
+		let validCandidate = g_markerMapping[move.label].count == 0 && RunEventType.fromLabel(move.label) == expectedNextEventType;		// label not yet used and its type matches
+		let assignShortcut = validCandidate && g_shortcutLabels.length < 9;			// at most 9 shortcuts
+
+		if (assignShortcut) {
+			tooltip = '[<span style="color:gold;font-weight:bold">' + (g_shortcutLabels.length + 1)  + '</span>] ';
+			g_shortcutLabels.push(move.label);
+		}
+
 		let antPath = L.polyline.antPath(latLngs, {
 			"delay": 100,
 			"dashArray": [
@@ -151,12 +159,13 @@ function guideLabel(label) {
 			],
 			"weight": 5,
 			"color": "#0000FF",
+			"opacity": validCandidate ? 0.5 : 0.2,
 			"pulseColor": "#FFFFFF",
 			"hardwareAccelerated" : true
 		}).addTo(g_guideLines);
-		antPath.bindTooltip('[<span style="color:gold;font-weight:bold">' + (index + 1)  + '</span>] ' + move.label + ' (<span style="color:salmon">' + (move.count * 100 / entry.totalCount) + "%</span>)",
-			 { permanent : true, className : 'no-background-tooltip', direction: 'center' });
-		g_shortcutLabels.push(move.label);
+
+		antPath.bindTooltip(tooltip + move.label + ' (<span style="color:salmon">' + (move.count * 100 / entry.totalCount).toFixed() + "%</span>)",
+			{ permanent : true, className : 'no-background-tooltip', direction: 'center', opacity : validCandidate ? 1.0 : 0.4 });
 	}
 }
 
