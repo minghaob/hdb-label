@@ -26,7 +26,7 @@ function initMap() {
 
 	// Add the image overlay 
 	// (replace 'path_to_your_large_image.jpg' with the path to your image file)
-	L.imageOverlay('botw-map.jpg', bounds).addTo(g_map);
+	L.imageOverlay('data/botw-map.jpg', bounds).addTo(g_map);
 
 	var korokIcon = L.icon({
 		iconUrl: 'icons/korok.png',
@@ -44,7 +44,7 @@ function initMap() {
 		iconAnchor:   [10, 10],
 	});
 
-	fetch('coords.json').then(response => {
+	fetch('data/coords.json').then(response => {
 		if (response.ok)
 			return response.json();
 	})
