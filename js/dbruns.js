@@ -3,6 +3,7 @@ let g_commu1OrderMarkovMove = {};           // label -> {           mapping from
                                             //   .next              array of {.label, .count}
                                             // }
 let g_runner1OrderMarkovMove = {};          // similar to g_commu1OrderMarkovMove but one for each runner (runner name as first level key)
+let g_existingRuns = new Set();
 
 function addMove(markovMove, last, cur) {
     if (!markovMove[last])
@@ -67,6 +68,7 @@ fetch(hdbRunsURL + 'list.txt')
                             if (runnerMove)
                                 addMove(runnerMove, last, cur);
                         }
+                        g_existingRuns.add(runDoc.uid);
                         numProcessedRuns++;
                         numLoadedRuns++;
                         if (numProcessedRuns == numTotalRuns)
