@@ -35,6 +35,7 @@ const RunEventType = {
 	DIVINEBEAST:	1 << 5,
 	SOR :			1 << 6,
 	ZORAMONUMENT:   1 << 7,
+	TECHLAB:		1 << 8,
 	fromLabel : label => {
 		if (label.endsWith('Shrine'))
 			return RunEventType.SHRINE;
@@ -46,8 +47,10 @@ const RunEventType = {
 			return RunEventType.MEMORY;
 		else if (label.startsWith('Vah'))
 			return RunEventType.DIVINEBEAST;
-		else if (label.startsWith('ZoraMonument'))
+		else if (label.startsWith('Zora Monument'))
 			return RunEventType.ZORAMONUMENT;
+		else if (label.endsWith('Tech Lab'))
+			return RunEventType.TECHLAB;
 		else if (label == 'Shrine of Resurrection')
 			return RunEventType.SOR;
 		else
@@ -63,7 +66,7 @@ const RunEventType = {
 		else if (text == "Memory")
 			return RunEventType.MEMORY;
 		else if (text == "Travel")
-			return RunEventType.TOWER | RunEventType.SHRINE | RunEventType.SOR;
+			return RunEventType.TOWER | RunEventType.SHRINE | RunEventType.SOR | RunEventType.TECHLAB;
 		else
 			return RunEventType.UNKNOWN;
 	}

@@ -53,6 +53,11 @@ function initMap() {
 		iconSize:     [20, 20],
 		iconAnchor:   [10, 10],
 	});
+	var techLabIcon = L.icon({
+		iconUrl: 'icons/techlab.png',
+		iconSize:     [20, 20],
+		iconAnchor:   [10, 10],
+	});
 
 	fetch('data/coords.json').then(response => {
 		if (response.ok)
@@ -98,8 +103,12 @@ function initMap() {
 				});
 				zOffset = 5000;
 			}
-			else if (k.startsWith('ZoraMonument')) {
+			else if (k.startsWith('Zora Monument')) {
 				icon = monumentIcon;
+				zOffset = -1000;
+			}
+			else if (k.endsWith('Tech Lab')) {
+				icon = techLabIcon;
 				zOffset = -1000;
 			}
 			else
