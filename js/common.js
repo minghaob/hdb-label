@@ -27,10 +27,14 @@ function frameIdxToTime(frameIdx) {
 }
 
 const RunEventType = {
-	UNKNOWN: 0,
-	KOROK : 1,
-	SHRINE : 2,
-	TOWER : 3,
+	UNKNOWN:		1 << 0,
+	KOROK :			1 << 1,
+	SHRINE :		1 << 2,
+	TOWER :			1 << 3,
+	MEMORY : 		1 << 4,
+	DIVINEBEAST:	1 << 5,
+	SOR :			1 << 6,
+	ZORAMONUMENT:   1 << 7,
 	fromLabel : label => {
 		if (label.endsWith('Shrine'))
 			return RunEventType.SHRINE;
@@ -38,6 +42,14 @@ const RunEventType = {
 			return RunEventType.TOWER;
 		else if (label.length == 3)
 			return RunEventType.KOROK;
+		else if (label.startsWith('Memory'))
+			return RunEventType.MEMORY;
+		else if (label.startsWith('Vah'))
+			return RunEventType.DIVINEBEAST;
+		else if (label.startsWith('ZoraMonument'))
+			return RunEventType.ZORAMONUMENT;
+		else if (label == 'Shrine of Resurrection')
+			return RunEventType.SOR;
 		else
 			return RunEventType.UNKNOWN;
 	},
@@ -48,6 +60,10 @@ const RunEventType = {
 			return RunEventType.TOWER;
 		else if (text == "Korok Seed")
 			return RunEventType.KOROK;
+		else if (text == "Memory")
+			return RunEventType.MEMORY;
+		else if (text == "Travel")
+			return RunEventType.TOWER | RunEventType.SHRINE | RunEventType.SOR;
 		else
 			return RunEventType.UNKNOWN;
 	}

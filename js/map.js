@@ -43,6 +43,16 @@ function initMap() {
 		iconSize:     [20, 20],
 		iconAnchor:   [10, 10],
 	});
+	var monumentIcon = L.icon({
+		iconUrl: 'icons/monument.png',
+		iconSize:     [16, 16],
+		iconAnchor:   [8, 8],
+	});
+	var memoryIcon = L.icon({
+		iconUrl: 'icons/memory.png',
+		iconSize:     [20, 20],
+		iconAnchor:   [10, 10],
+	});
 
 	fetch('data/coords.json').then(response => {
 		if (response.ok)
@@ -66,6 +76,31 @@ function initMap() {
 			else if (k.length == 3) {
 				icon = korokIcon;
 				zOffset = data[k].Y;
+			}
+			else if (k.startsWith('Vah')) {
+				var name = k.split(' ').slice(0, 2).join('_').toLowerCase();
+				icon = L.icon({
+					iconUrl: 'icons/' + name + '.png',
+					iconSize:     [20, 20],
+					iconAnchor:   [10, 10],
+				});
+				zOffset = 5000;
+			}
+			else if (k.startsWith('Memory')) {
+				icon = memoryIcon;
+				zOffset = 5000;
+			}
+			else if (k == 'Shrine of Resurrection') {
+				icon = L.icon({
+					iconUrl: 'icons/sor.png',
+					iconSize:     [20, 20],
+					iconAnchor:   [10, 10],
+				});
+				zOffset = 5000;
+			}
+			else if (k.startsWith('ZoraMonument')) {
+				icon = monumentIcon;
+				zOffset = -1000;
 			}
 			else
 				continue;
@@ -131,8 +166,9 @@ function guideLabel(label, expectedNextEventType = null) {
 		return;
 
 	let latLngs = [[],[]];
-	if (label.length == 0)
-		latLngs[0] = g_markerMapping["P09"].marker.getLatLng();		// empty label means it's the first move of the run, which is starting at SoR. P09 has the same coordinates as SoR.
+	if (label.length == 0) {
+		latLngs[0] = g_markerMapping["Shrine of Resurrection"].marker.getLatLng();		// empty label means it's the first move of the run, which is starting at SoR.
+	}
 	else {
 		if (!g_markerMapping[label])
 			return;
@@ -143,7 +179,7 @@ function guideLabel(label, expectedNextEventType = null) {
 		latLngs[1] = g_markerMapping[move.label].marker.getLatLng();
 
 		let tooltip = '';
-		let validCandidate = g_markerMapping[move.label].count == 0 && RunEventType.fromLabel(move.label) == expectedNextEventType;		// label not yet used and its type matches
+		let validCandidate = g_markerMapping[move.label].count == 0 && (RunEventType.fromLabel(move.label) & expectedNextEventType) != 0;		// label not yet used and its type matches
 		let assignShortcut = validCandidate && g_shortcutLabels.length < 9;			// at most 9 shortcuts
 
 		if (assignShortcut) {
