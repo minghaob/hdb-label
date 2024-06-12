@@ -110,11 +110,19 @@ async function loadSavedFile() {
 				assignLabelToEvent(gEventIdx, wipDoc.events[eventIdx].label);
 				numLoadedEvents++;
 			}
+			// else if (g_events[gEventIdx].overallFrame < wipDoc.events[eventIdx].frame + 35) {
+			// 	assignLabelToEvent(gEventIdx, wipDoc.events[eventIdx].label);
+			// 	numLoadedEvents++;
+			// }
+			// else if (gEventIdx > 0 && g_events[gEventIdx - 1].overallFrame > wipDoc.events[eventIdx].frame - 35) {
+			// 	assignLabelToEvent(gEventIdx - 1, wipDoc.events[eventIdx].label);
+			// 	numLoadedEvents++;
+			// }
 		}
 
 		let msg = 'Loaded ' + numLoadedEvents + ' event data from ' + g_runDoc.uid + '.yaml';
 		if (numLoadedEvents != wipDoc.events.length)
-			msg += ' (' + wipDoc.events.length - numLoadedEvents + ' ignored)';
+			msg += ' (' + (wipDoc.events.length - numLoadedEvents) + ' ignored)';
 		logMessage(msg);
 
 	} catch (error) {
@@ -350,6 +358,8 @@ function initSaveButton() {
 					curEvent.flag = g_events[i].flag;
 				if (g_events[i].comment)
 					curEvent.comment = g_events[i].comment;
+				if (g_events[i].text == 'Travel')
+					curEvent.type = 'Travel';
 				saveObj.events.push(curEvent);
 			}
 		}
