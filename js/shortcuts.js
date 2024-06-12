@@ -15,6 +15,16 @@ document.addEventListener('keydown', function(event) {
 		if (g_events && g_selectedEventIdx + 1 < g_events.length)
 			selectEvent(g_selectedEventIdx + 1);
 	}
+	else if (event.code == 'KeyN') {									// select next unassigned event
+		if (g_events) {
+			for (let i = 1; i <= g_events.length; i++) {
+				if (g_events[(g_selectedEventIdx + i) % g_events.length].label == null){
+					selectEvent((g_selectedEventIdx + i) % g_events.length);
+					break;
+				}
+			}
+		}
+	}
 	else if (event.code == 'KeyA') {									// seek video
 		if (event.shiftKey)
 			seekVideo(-0.2);
