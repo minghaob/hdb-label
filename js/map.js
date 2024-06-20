@@ -188,7 +188,7 @@ function guideLabel(label, expectedNextEventType = null) {
 		latLngs[1] = g_markerMapping[move.label].marker.getLatLng();
 
 		let tooltip = '';
-		let validCandidate = g_markerMapping[move.label].count == 0 && (RunEventType.fromLabel(move.label) & expectedNextEventType) != 0;		// label not yet used and its type matches
+		let validCandidate = g_markerMapping[move.label].count == 0 && (EventType.fromLabel(move.label) & expectedNextEventType) != 0;		// label not yet used and its type matches
 		let assignShortcut = validCandidate && g_shortcutLabels.length < 9;			// at most 9 shortcuts
 
 		if (assignShortcut) {

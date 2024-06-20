@@ -157,6 +157,8 @@ function initLoadButton() {
 			// load the video files to video elements
 			let videos = [];
 			let numLoadedVideos = 0;
+			let numIgnoredEvents = 0;
+			let numLoadedEvents = {};
 			for (let vidIdx = 0; vidIdx < runDoc.videos.length; vidIdx++) {
 				if (typeof runDoc.videos[vidIdx].local !== 'string')
 					throw 'video['+ vidIdx + '] missing \'local\' property of type string';
@@ -203,7 +205,7 @@ function initLoadButton() {
 						try {
 							let baseFrame = 0;		// overall frame index of current segment's first frame
 							for (let rawFileIdx = 0; rawFileIdx < runDoc.videos.length; rawFileIdx++) {
-								let fileName = 'raw_' + (rawFileIdx + 1).toString().padStart(2, '0') + '.yaml';		// raw files has filename numbered from 1 instead of 0
+								let fileName = 'assembled_' + rawFileIdx.toString() + '.yaml';		// raw files has filename numbered from 1 instead of 0
 								const fileHandle = await folderHandle.getFileHandle(fileName, { create: false });
 								const content = await getFileContent(fileHandle);
 								let rawDoc = jsyaml.load(content);
@@ -211,8 +213,8 @@ function initLoadButton() {
 									throw (fileName + ' does not have valid events property');
 								let curSeg = 0;
 								for (let eventIdx = 0; eventIdx < rawDoc.events.length; eventIdx++) {
-									let eventFrameInFile = rawDoc.events[eventIdx][0];
-									if (eventIdx > 0 && eventFrameInFile <= rawDoc.events[eventIdx - 1][0])
+									let eventFrameInFile = rawDoc.events[eventIdx].frame[0];
+									if (eventIdx > 0 && eventFrameInFile <= rawDoc.events[eventIdx - 1].frame[0])
 										throw (fileName + ': event frame ' + eventFrameInFile + ' not larger than previous event frame');
 									// If event frame larger then current segment, advance current segment
 									while (eventFrameInFile > runDoc.videos[rawFileIdx].segments[curSeg][1]) {
@@ -221,14 +223,23 @@ function initLoadButton() {
 										if (curSeg >= runDoc.videos[rawFileIdx].segments.length)		// event frame larger than last segment of video
 											throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
 									}
-									if (rawDoc.events[eventIdx][0] < runDoc.videos[rawFileIdx].segments[curSeg][0])		// event frame smaller than current segment, indicating that it's between the current segment and last segment
+									if (rawDoc.events[eventIdx].frame[0] < runDoc.videos[rawFileIdx].segments[curSeg][0])		// event frame smaller than current segment, indicating that it's between the current segment and last segment
 										throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
+
+									let type = EventType.fromText(rawDoc.events[eventIdx].type);
+									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
+										&& type != EventType.IGNEOTALUS && type != EventType.STALNOX && type != EventType.MOLDUGA && type != EventType.ZORAMONUMENT
+										&& type != EventType.WARP && type != EventType.SHRINE && type != EventType.MEMORY && type != EventType.DIVINEBEAST){
+										numIgnoredEvents++;
+										continue;
+									}
 									events.push({
 										'overallFrame': baseFrame + eventFrameInFile - runDoc.videos[rawFileIdx].segments[curSeg][0],
-										'text': rawDoc.events[eventIdx][1],
+										'text': rawDoc.events[eventIdx].type,
 										'videoFileIdx': rawFileIdx,
 										'frameInFile' : eventFrameInFile,
-									})
+									});
+									numLoadedEvents[type] = (numLoadedEvents[type] ?? 0) + 1;
 								}
 
 								for (; curSeg < runDoc.videos[rawFileIdx].segments.length; curSeg++)
@@ -261,6 +272,11 @@ function initLoadButton() {
 						}
 
 						logMessage("Loaded run: " + runDoc.uid);
+						logMessage("Loaded " + events.length + " events. Ignored " + numIgnoredEvents + ".");
+						logMessage("Loaded events by type:");
+						for (const key in numLoadedEvents) {
+							logMessage(EventType.toName(key) + ": " + numLoadedEvents[key]);
+						}
 
 						// assign loaded data to global instances, 
 						g_videos = videos;
@@ -496,14 +512,14 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	}
 
 	if (g_selectedEventIdx == 0) {
-		guideLabel("", RunEventType.fromText(g_events[g_selectedEventIdx].text));
+		guideLabel("", EventType.fromText(g_events[g_selectedEventIdx].text));
 		bounds.extend(g_guideLines.getBounds());
 		if (shouldHighlightMarker)
 			g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 	}
 	else if (g_selectedEventIdx > 0) {
 		if (g_events[g_selectedEventIdx - 1].label) {
-			guideLabel(g_events[g_selectedEventIdx - 1].label, RunEventType.fromText(g_events[g_selectedEventIdx].text));
+			guideLabel(g_events[g_selectedEventIdx - 1].label, EventType.fromText(g_events[g_selectedEventIdx].text));
 			bounds.extend(g_guideLines.getBounds());
 			if (shouldHighlightMarker)
 				g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
