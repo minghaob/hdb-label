@@ -50,6 +50,18 @@ const EventType = {
 	DIVINEBEAST:		20,
 
 	init : () => {
+		EventType.valueToName = {};
+		for (const key in EventType) {
+			if (key == key.toUpperCase())
+				EventType.valueToName[EventType[key]] = key;
+		}
+		EventType.toName = value => {
+			if (value in EventType.valueToName)
+				return EventType.valueToName[value];
+			else
+				return null;
+		};
+
 		EventType.textToType = {
 			// should match the text used in event-detector
 			"Korok Seed":		EventType.KOROK,
@@ -79,18 +91,17 @@ const EventType = {
 			else
 				return EventType.UNKNOWN;
 		};
-		EventType.toName = value => {
-			if (value in EventType.valueToName)
-				return EventType.valueToName[value];
+
+		EventType.typeToText = {};
+		for (const key in EventType.textToType) {
+			EventType.typeToText[EventType.textToType[key]] = key;
+		}
+		EventType.toText = type => {
+			if (type in EventType.typeToText)
+				return EventType.typeToText[type];
 			else
 				return null;
 		};
-	
-		EventType.valueToName = {};
-		for (const key in EventType) {
-			if (key == key.toUpperCase())
-				EventType.valueToName[EventType[key]] = key;
-		}
 	}
 }
 

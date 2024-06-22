@@ -1,8 +1,9 @@
 let g_runDoc;			// object loaded from run.yaml
 let g_videos;
-let g_events;			// .begin:				overall begin frame 
+let g_events;			// .begin:				overall begin frame
 						// .end:				overall end frame
 						// .text:				rawDoc.events[eventIdx][1],
+						// .type:				EventType
 						// .videoFileIdx:		rawFileIdx,
 						// .seekFrameInVideo:	the frame to seek to when viewing the event in video,
 						// .label:				assigned label, e.g. "Z03", "Mogg Latan Shrine", "Ridgeland Tower"
@@ -97,28 +98,35 @@ async function loadSavedFile() {
 		let wipDoc = jsyaml.load(content);
 		if (!Array.isArray(wipDoc.events))
 			throw (g_runDoc.uid + '.yaml' + ' does not have valid events property');
-		let gEventIdx = 0;
 		let numLoadedEvents = 0;
 		for (let eventIdx = 0; eventIdx < wipDoc.events.length; eventIdx++) {
-			while (gEventIdx < g_events.length && g_events[gEventIdx].overallFrame < wipDoc.events[eventIdx].frame)
-				gEventIdx++;
-			if (gEventIdx >= g_events.length)
-				break;
-			if (g_events[gEventIdx].overallFrame == wipDoc.events[eventIdx].frame) {
-				assignLabelToEvent(gEventIdx, wipDoc.events[eventIdx].label);
+			let evt = wipDoc.events[eventIdx];
+			let type = EventType.fromText(evt.type);
+			let assignTargetIdx = -1;
+			for (let gEventIdx = 0; gEventIdx < g_events.length; gEventIdx++) {
+				let gEvt = g_events[gEventIdx];
+				if (type != gEvt.type)
+					continue;
+				if ((evt.frame[0] >= gEvt.beginFrame && evt.frame[0] <= gEvt.endFrame)
+					|| (evt.frame[1] >= gEvt.beginFrame && evt.frame[1] <= gEvt.endFrame)
+					|| (gEvt.beginFrame >= evt.frame[0] && gEvt.beginFrame <= evt.frame[1])
+					|| (gEvt.endFrame >= evt.frame[0] && gEvt.endFrame <= evt.frame[1])
+				)
+				{
+					if (assignTargetIdx == -1)
+						assignTargetIdx = gEventIdx;
+					else
+						assignTargetIdx = -2;
+				}
+			}
+
+			if (assignTargetIdx >= 0) {
+				assignLabelToEvent(assignTargetIdx, wipDoc.events[eventIdx].label);
 				numLoadedEvents++;
 			}
-			// else if (g_events[gEventIdx].overallFrame < wipDoc.events[eventIdx].frame + 35) {
-			// 	assignLabelToEvent(gEventIdx, wipDoc.events[eventIdx].label);
-			// 	numLoadedEvents++;
-			// }
-			// else if (gEventIdx > 0 && g_events[gEventIdx - 1].overallFrame > wipDoc.events[eventIdx].frame - 35) {
-			// 	assignLabelToEvent(gEventIdx - 1, wipDoc.events[eventIdx].label);
-			// 	numLoadedEvents++;
-			// }
 		}
 
-		let msg = 'Loaded ' + numLoadedEvents + ' event data from ' + g_runDoc.uid + '.yaml';
+		let msg = 'Loaded ' + numLoadedEvents + ' labeling data from ' + g_runDoc.uid + '.yaml';
 		if (numLoadedEvents != wipDoc.events.length)
 			msg += ' (' + (wipDoc.events.length - numLoadedEvents) + ' ignored)';
 		logMessage(msg);
@@ -230,7 +238,7 @@ function initLoadButton() {
 									if (overallFrameRange[0] < 0)
 										throw (fileName + ': event frame ' + overallFrameRange[0] + ' outside video segments');
 									if (overallFrameRange[1] < 0)
-										throw (fileName + ': event frame ' + overallFrameRange[0] + ' outside video segments');
+										throw (fileName + ': event frame ' + overallFrameRange[1] + ' outside video segments');
 
 									let type = EventType.fromText(rawDoc.events[eventIdx].type);
 									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
@@ -242,12 +250,25 @@ function initLoadButton() {
 									let seekFrame = frameRange[0];
 									if (type == EventType.SHRINE)
 										seekFrame -= 40;		// seek a bit back to before entering the shrine to have the shrine name on screen
-									events.push({
-										'overallFrameRange': overallFrameRange,
+									let evt = {
+										'beginFrame': overallFrameRange[0],
+										'endFrame': overallFrameRange[1],
 										'text': rawDoc.events[eventIdx].type,
+										'type': type,
 										'videoFileIdx': rawFileIdx,
-										'seekFrameInVideo' : seekFrame,
-									});
+										'seekFrameInVideo': seekFrame,
+									};
+									if (rawDoc.events[eventIdx].segments) {
+										evt.segments = rawDoc.events[eventIdx].segments;
+										if (evt.segments[evt.segments.length - 1][0] != frameRange[1])
+											throw (fileName + ': last segment frame ' + evt.segments[evt.segments.length - 1][0] + ' does not align with event end frame');
+										for (let segIdx = 0; segIdx < evt.segments.length; segIdx++) {
+											if (evt.segments[segIdx][0] < frameRange[0] || evt.segments[segIdx][0] > frameRange[1])
+												throw (fileName + ': segment frame ' + evt.segments[segIdx][0] + ' event frame range');
+											evt.segments[segIdx][0] = videoFrameToOverallFrame(evt.segments[segIdx][0]);
+										}
+								}
+									events.push(evt);
 									numLoadedEvents[type] = (numLoadedEvents[type] ?? 0) + 1;
 								}
 
@@ -272,8 +293,8 @@ function initLoadButton() {
 							// insert one row for each event
 							for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
 								const newRow = tbodyEle.insertRow(-1);
-								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrameRange[0]);	// begin
-								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrameRange[1]);	// end
+								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].beginFrame);				// begin
+								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].endFrame);				// end
 								newRow.insertCell(-1).innerHTML = events[eventIdx].text;									// text
 								newRow.insertCell(-1);																		// label
 							}
@@ -345,53 +366,52 @@ function drawVideo() {
 	requestAnimationFrame(() => drawVideo());
 }
 
+async function SaveProgress() {
+	if (!g_folderHandle || !g_runDoc || !g_events)
+		return;
+
+	let saveObj = {};		// object to be written to output file
+
+	// metadata from loaded run.yaml
+	saveObj.uid = g_runDoc.uid;
+	if (g_runDoc.runner)
+		saveObj.runner = g_runDoc.runner;
+	if (g_runDoc.src_id)
+		saveObj.src_id = g_runDoc.src_id;
+	saveObj.videos = [];
+	for (let i = 0; i < g_runDoc.videos.length; i++) {
+		let curVideo = {};
+		if (g_runDoc.videos[i].remote)
+			curVideo.remote = g_runDoc.videos[i].remote;
+		curVideo.segments = g_runDoc.videos[i].segments;
+		saveObj.videos.push(curVideo);
+	}
+
+	// in-memory event data
+	saveObj.events = [];
+	for (let i = 0; i < g_events.length; i++) {
+		let gEvt = g_events[i];
+		if (gEvt.label) {				// only include events that are labeled
+			let evt = {
+				"frame": [gEvt.beginFrame, gEvt.endFrame],
+				"label": gEvt.label,
+				"type": EventType.toText(gEvt.type),
+			};
+			if (gEvt.segments)
+				evt.segments = gEvt.segments;
+			saveObj.events.push(evt);
+		}
+	}
+
+	let content = jsyaml.dump(saveObj, {flowLevel : 2});
+	if (await writeToFile(g_folderHandle, saveObj.uid + '.yaml', content)) {
+		logMessage('Saved to ' + saveObj.uid + '.yaml');
+	}
+}
 function initSaveButton() {
 	const btn = document.getElementById('btn-save');
 
-	btn.addEventListener('click', async () => {
-		if (!g_folderHandle || !g_runDoc || !g_events)
-			return;
-
-		let saveObj = {};		// object to be written to output file
-
-		// metadata from loaded run.yaml
-		saveObj.uid = g_runDoc.uid;
-		if (g_runDoc.runner)
-			saveObj.runner = g_runDoc.runner;
-		if (g_runDoc.src_id)
-			saveObj.src_id = g_runDoc.src_id;
-		saveObj.videos = [];
-		for (let i = 0; i < g_runDoc.videos.length; i++) {
-			let curVideo = {};
-			if (g_runDoc.videos[i].remote)
-				curVideo.remote = g_runDoc.videos[i].remote;
-			curVideo.segments = g_runDoc.videos[i].segments;
-			saveObj.videos.push(curVideo);
-		}
-
-		// in-memory event data
-		saveObj.events = [];
-		for (let i = 0; i < g_events.length; i++) {
-			if (g_events[i].label) {				// only included events that already have label assigned
-				let curEvent = {};
-				curEvent.frame = g_events[i].overallFrame;
-				curEvent.label = g_events[i].label;
-				if (g_events[i].sublabel)
-					curEvent.sublabel = g_events[i].sublabel;
-				if (g_events[i].flag)
-					curEvent.flag = g_events[i].flag;
-				if (g_events[i].comment)
-					curEvent.comment = g_events[i].comment;
-				if (g_events[i].text == 'Travel')
-					curEvent.type = 'Travel';
-				saveObj.events.push(curEvent);
-			}
-		}
-		let content = jsyaml.dump(saveObj);
-		if (await writeToFile(g_folderHandle, saveObj.uid + '.yaml', content)) {
-			logMessage('Saved to ' + saveObj.uid + '.yaml');
-		}
-	});
+	btn.addEventListener('click', SaveProgress);
 }
 
 async function clickMute(event) {
@@ -520,14 +540,14 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	}
 
 	if (g_selectedEventIdx == 0) {
-		guideLabel("", EventType.fromText(g_events[g_selectedEventIdx].text));
+		guideLabel("", g_events[g_selectedEventIdx].type);
 		bounds.extend(g_guideLines.getBounds());
 		if (shouldHighlightMarker)
 			g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 	}
 	else if (g_selectedEventIdx > 0) {
 		if (g_events[g_selectedEventIdx - 1].label) {
-			guideLabel(g_events[g_selectedEventIdx - 1].label, EventType.fromText(g_events[g_selectedEventIdx].text));
+			guideLabel(g_events[g_selectedEventIdx - 1].label, g_events[g_selectedEventIdx].type);
 			bounds.extend(g_guideLines.getBounds());
 			if (shouldHighlightMarker)
 				g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
@@ -608,7 +628,7 @@ function assignLabelToSelectedEvent(label, forceAssign = false) {
 	if (g_selectedEventIdx < 0)
 		return;
 
-	let eventType = EventType.fromText(g_events[g_selectedEventIdx].text);
+	let eventType = g_events[g_selectedEventIdx].type;
 	let labelType = LabelType.fromLabel(label);
 	if (!labelAndEventTypesMatch(labelType, eventType))
 		return;
