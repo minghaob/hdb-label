@@ -1,13 +1,11 @@
 let g_runDoc;			// object loaded from run.yaml
 let g_videos;
-let g_events;			// .overallFrame:	baseFrame + eventFrameInFile - runDoc.videos[rawFileIdx].segments[curSeg][0],
-						// .text:			rawDoc.events[eventIdx][1],
-						// .videoFileIdx:	rawFileIdx,
-						// .frameInFile:	eventFrameInFile,
-						// .label:			assigned label, e.g. "Z03", "Mogg Latan Shrine", "Ridgeland Tower"
-						// .sublabel:		[NOT YET IMPLEMENTED] assigned sublabel, e.g. "Enter Shrine"
-						// .flag:			[NOT YET IMPLEMENTED] e.g. "KilledTalus", "GotLocation"
-						// .comment:		[NOT YET IMPLEMENTED]
+let g_events;			// .begin:				overall begin frame 
+						// .end:				overall end frame
+						// .text:				rawDoc.events[eventIdx][1],
+						// .videoFileIdx:		rawFileIdx,
+						// .seekFrameInVideo:	the frame to seek to when viewing the event in video,
+						// .label:				assigned label, e.g. "Z03", "Mogg Latan Shrine", "Ridgeland Tower"
 let g_selectedEventIdx = -1;
 let g_activeVideoIdx = -1;
 let g_folderHandle;
@@ -203,7 +201,7 @@ function initLoadButton() {
 
 						// collect events from all raw files
 						try {
-							let baseFrame = 0;		// overall frame index of current segment's first frame
+							let videoBaseFrame = 0;		// overall frame index of current video's first segment's first frame
 							for (let rawFileIdx = 0; rawFileIdx < runDoc.videos.length; rawFileIdx++) {
 								let fileName = 'assembled_' + rawFileIdx.toString() + '.yaml';		// raw files has filename numbered from 1 instead of 0
 								const fileHandle = await folderHandle.getFileHandle(fileName, { create: false });
@@ -211,20 +209,28 @@ function initLoadButton() {
 								let rawDoc = jsyaml.load(content);
 								if (!Array.isArray(rawDoc.events))
 									throw (fileName + ' does not have valid events property');
-								let curSeg = 0;
-								for (let eventIdx = 0; eventIdx < rawDoc.events.length; eventIdx++) {
-									let eventFrameInFile = rawDoc.events[eventIdx].frame[0];
-									if (eventIdx > 0 && eventFrameInFile <= rawDoc.events[eventIdx - 1].frame[0])
-										throw (fileName + ': event frame ' + eventFrameInFile + ' not larger than previous event frame');
-									// If event frame larger then current segment, advance current segment
-									while (eventFrameInFile > runDoc.videos[rawFileIdx].segments[curSeg][1]) {
-										baseFrame += runDoc.videos[rawFileIdx].segments[curSeg][1] - runDoc.videos[rawFileIdx].segments[curSeg][0] + 1;
-										curSeg++;
-										if (curSeg >= runDoc.videos[rawFileIdx].segments.length)		// event frame larger than last segment of video
-											throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
+								let videoFrameToOverallFrame = videoFrame => {
+									let segmentBaseFrame = videoBaseFrame;
+									for (let curSegIdx = 0; curSegIdx < runDoc.videos[rawFileIdx].segments.length; curSegIdx++) {
+										let curSegRange = runDoc.videos[rawFileIdx].segments[curSegIdx];
+										if (videoFrame >= curSegRange[0] && videoFrame <= curSegRange[1])
+											return segmentBaseFrame + videoFrame - curSegRange[0];
+										segmentBaseFrame += curSegRange[1] - curSegRange[0] + 1;
 									}
-									if (rawDoc.events[eventIdx].frame[0] < runDoc.videos[rawFileIdx].segments[curSeg][0])		// event frame smaller than current segment, indicating that it's between the current segment and last segment
-										throw (fileName + ': event frame ' + eventFrameInFile + ' in ' + fileName + ' outside segments');
+									return -1;
+								}
+								for (let eventIdx = 0; eventIdx < rawDoc.events.length; eventIdx++) {
+									let frameRange = rawDoc.events[eventIdx].frame;
+									if (eventIdx > 0 && frameRange[0] <= rawDoc.events[eventIdx - 1].frame[0])
+										throw (fileName + ': event frame ' + frameRange[0] + ' not larger than previous event frame');
+									if (rawDoc.events[eventIdx].frame[1] < rawDoc.events[eventIdx].frame[0])
+										throw (fileName + ': event frame range [' + frameRange[0] + ', ' + frameRange[1] + '] invalid');
+
+									let overallFrameRange = [videoFrameToOverallFrame(frameRange[0]), videoFrameToOverallFrame(frameRange[1])];
+									if (overallFrameRange[0] < 0)
+										throw (fileName + ': event frame ' + overallFrameRange[0] + ' outside video segments');
+									if (overallFrameRange[1] < 0)
+										throw (fileName + ': event frame ' + overallFrameRange[0] + ' outside video segments');
 
 									let type = EventType.fromText(rawDoc.events[eventIdx].type);
 									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
@@ -233,17 +239,20 @@ function initLoadButton() {
 										numIgnoredEvents++;
 										continue;
 									}
+									let seekFrame = frameRange[0];
+									if (type == EventType.SHRINE)
+										seekFrame -= 40;		// seek a bit back to before entering the shrine to have the shrine name on screen
 									events.push({
-										'overallFrame': baseFrame + eventFrameInFile - runDoc.videos[rawFileIdx].segments[curSeg][0],
+										'overallFrameRange': overallFrameRange,
 										'text': rawDoc.events[eventIdx].type,
 										'videoFileIdx': rawFileIdx,
-										'frameInFile' : eventFrameInFile,
+										'seekFrameInVideo' : seekFrame,
 									});
 									numLoadedEvents[type] = (numLoadedEvents[type] ?? 0) + 1;
 								}
 
-								for (; curSeg < runDoc.videos[rawFileIdx].segments.length; curSeg++)
-									baseFrame += runDoc.videos[rawFileIdx].segments[curSeg][1] - runDoc.videos[rawFileIdx].segments[curSeg][0] + 1;
+								for (let curSeg = 0; curSeg < runDoc.videos[rawFileIdx].segments.length; curSeg++)
+									videoBaseFrame += runDoc.videos[rawFileIdx].segments[curSeg][1] - runDoc.videos[rawFileIdx].segments[curSeg][0] + 1;
 
 								logMessage('Loaded raw file \''+ fileName + '\'');
 							}
@@ -263,11 +272,10 @@ function initLoadButton() {
 							// insert one row for each event
 							for (let eventIdx = 0; eventIdx < events.length; eventIdx++) {
 								const newRow = tbodyEle.insertRow(-1);
-								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrame);	// frame
-								newRow.insertCell(-1).innerHTML = events[eventIdx].text;							// text
-								newRow.insertCell(-1);																// label
-								newRow.insertCell(-1);																// flags
-								newRow.insertCell(-1);																// comment
+								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrameRange[0]);	// begin
+								newRow.insertCell(-1).innerHTML = frameIdxToTime(events[eventIdx].overallFrameRange[1]);	// end
+								newRow.insertCell(-1).innerHTML = events[eventIdx].text;									// text
+								newRow.insertCell(-1);																		// label
 							}
 						}
 
@@ -487,7 +495,7 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 
 	let oldVideoIdx = g_activeVideoIdx;
 	g_activeVideoIdx = g_events[eventIdx].videoFileIdx;
-	g_videos[g_activeVideoIdx].currentTime = g_events[eventIdx].frameInFile / 30;
+	g_videos[g_activeVideoIdx].currentTime = g_events[eventIdx].seekFrameInVideo / 30;
 	if (oldVideoIdx != g_activeVideoIdx && oldVideoIdx >= 0) {
 		g_videos[oldVideoIdx].pause();
 		if (g_playing)
@@ -543,6 +551,7 @@ function unselectEvent() {
 	guideLabel(null);
 }
 
+// This function does not do any verification of type matching. Verify before calling it
 function assignLabelToEvent(eventIdx, label) {
 	// clean-up the old label
 	if (g_events[eventIdx].label) {
@@ -564,7 +573,7 @@ function assignLabelToEvent(eventIdx, label) {
 	// put in the label column
 	const eventRow = document.querySelector('#event-table tbody').childNodes[eventIdx];
 	if (eventRow)
-		eventRow.childNodes[2].innerHTML = label;			// label is column 2
+		eventRow.childNodes[3].innerHTML = label;			// label is column 2
 
 	// hide highlight marker if needed
 	if (eventIdx == g_selectedEventIdx && label == null)
@@ -599,8 +608,13 @@ function assignLabelToSelectedEvent(label, forceAssign = false) {
 	if (g_selectedEventIdx < 0)
 		return;
 
-	// prevent assigning a marker that is already assigned, unless forceAssign is true
-	if (g_markerMapping[label].count == 0 || forceAssign) {
+	let eventType = EventType.fromText(g_events[g_selectedEventIdx].text);
+	let labelType = LabelType.fromLabel(label);
+	if (!labelAndEventTypesMatch(labelType, eventType))
+		return;
+
+	// prevent assigning a marker that is already assigned, unless forceAssign is true or the event is a warp
+	if (g_markerMapping[label].count == 0 || forceAssign || eventType == EventType.WARP) {
 		// assign label
 		assignLabelToEvent(g_selectedEventIdx, label);
 

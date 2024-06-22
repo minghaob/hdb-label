@@ -72,7 +72,8 @@ body, html {
 	background-color: #f9f9f9;
 }
 
-#event-table tr td:nth-child(1) {
+#event-table tr td:nth-child(1),
+#event-table tr td:nth-child(2) {
     text-align: right;
 }
 

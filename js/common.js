@@ -137,29 +137,29 @@ const LabelType = {
 	}
 }
 
-function labelAndEventTypesMatch(label, event) {
-	if (event == EventType.KOROK)
-		return label == LabelType.KOROK;
-	else if (event == EventType.TOWERACTIVATION)
-		return label == LabelType.TOWER;
-	else if (event == EventType.STONETALUS)
-		return label == LabelType.STONETALUS;
-	else if (event == EventType.IGNEOTALUS)
-		return label == LabelType.IGNEOTALUS;
-	else if (event == EventType.FROSTTALUS)
-		return label == LabelType.FROSTTALUS;
-	else if (event == EventType.STALNOX)
-		return label == LabelType.STALNOX;
-	else if (event == EventType.MOLDUGA)
-		return label == LabelType.MOLDUGA;
-	else if (event == EventType.ZORAMONUMENT)
-		return label == LabelType.ZORAMONUMENT;
-	else if (event == EventType.WARP)
-		return label == LabelType.SHRINE || label == LabelType.TOWER || label == LabelType.SOR || label == LabelType.TECHLAB || label == LabelType.DIVINEBEASTTAMED;
-	else if (event == EventType.SHRINE)
-		return label == LabelType.SHRINE;
-	else if (event == EventType.MEMORY)
-		return label == LabelType.MEMORY;
-	else if (event == EventType.DIVINEBEAST)
-		return label == LabelType.DIVINEBEAST;
+function labelAndEventTypesMatch(labelType, eventType) {
+	if (eventType == EventType.KOROK)
+		return labelType == LabelType.KOROK;
+	else if (eventType == EventType.TOWERACTIVATION)
+		return labelType == LabelType.TOWER;
+	else if (eventType == EventType.STONETALUS)
+		return labelType == LabelType.STONETALUS;
+	else if (eventType == EventType.IGNEOTALUS)
+		return labelType == LabelType.IGNEOTALUS;
+	else if (eventType == EventType.FROSTTALUS)
+		return labelType == LabelType.FROSTTALUS;
+	else if (eventType == EventType.STALNOX)
+		return labelType == LabelType.STALNOX;
+	else if (eventType == EventType.MOLDUGA)
+		return labelType == LabelType.MOLDUGA;
+	else if (eventType == EventType.ZORAMONUMENT)
+		return labelType == LabelType.ZORAMONUMENT;
+	else if (eventType == EventType.WARP)
+		return labelType == LabelType.SHRINE || labelType == LabelType.TOWER || labelType == LabelType.SOR || labelType == LabelType.TECHLAB || labelType == LabelType.DIVINEBEASTTAMED;
+	else if (eventType == EventType.SHRINE)
+		return labelType == LabelType.SHRINE;
+	else if (eventType == EventType.MEMORY)
+		return labelType == LabelType.MEMORY;
+	else if (eventType == EventType.DIVINEBEAST)
+		return labelType == LabelType.DIVINEBEAST;
 }
