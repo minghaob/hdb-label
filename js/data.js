@@ -243,7 +243,8 @@ function initLoadButton() {
 									let type = EventType.fromText(rawDoc.events[eventIdx].type);
 									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
 										&& type != EventType.IGNEOTALUS && type != EventType.STALNOX && type != EventType.MOLDUGA && type != EventType.ZORAMONUMENT
-										&& type != EventType.WARP && type != EventType.SHRINE && type != EventType.MEMORY && type != EventType.DIVINEBEAST){
+										&& type != EventType.WARP && type != EventType.SHRINE && type != EventType.MEMORY
+										&& type != EventType.MEDOH && type != EventType.NABORIS && type != EventType.RUTA && type != EventType.RUDANIA){
 										numIgnoredEvents++;
 										continue;
 									}

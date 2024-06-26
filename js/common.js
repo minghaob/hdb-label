@@ -43,11 +43,20 @@ const EventType = {
 	MOLDUGA:			13,
 	ZORAMONUMENT:   	14,
 	DIALOG:				15,
-	LOAD:				16,
-	WARP:				17,
-	SHRINE:				18,
-	MEMORY: 			19,
-	DIVINEBEAST:		20,
+	GATEREGISTERED:		16,
+	SLATEAUTHENTICATED:	17,
+	REVALIGALE:			18,
+	URBOSAFURY:			19,
+	MIPHAGRACE:			20,
+	DARUKPROTECTION:	21,
+	LOAD:				22,
+	WARP:				23,
+	SHRINE:				24,
+	MEMORY: 			25,
+	MEDOH:				26,
+	NABORIS:			27,
+	RUTA:				28,
+	RUDANIA:			29,
 
 	init : () => {
 		EventType.valueToName = {};
@@ -64,26 +73,35 @@ const EventType = {
 
 		EventType.textToType = {
 			// should match the text used in event-detector
-			"Korok Seed":		EventType.KOROK,
-			"Spirit Orb":		EventType.SPIRITORB,
-			"Tower Activation":	EventType.TOWERACTIVATION,
-			"Travel Button":	EventType.TRAVELBUTTON,
-			"Loading Screen":	EventType.LOADINGSCREEN,
-			"Black Screen":		EventType.BLACKSCREEN,
-			"White Screen":		EventType.WHITESCREEN,
-			"Album Page":		EventType.ALBUMPAGE,
-			"Stone Talus":		EventType.STONETALUS,
-			"Frost Talus":		EventType.FROSTTALUS,
-			"Igneo Talus":		EventType.IGNEOTALUS,
-			"Stalnox":			EventType.STALNOX,
-			"Molduga":			EventType.MOLDUGA,
-			"Zora Monument":	EventType.ZORAMONUMENT,
-			"Dialog":			EventType.DIALOG,
-			"Load":				EventType.LOAD,
-			"Warp":				EventType.WARP,
-			"Shrine":			EventType.SHRINE,
-			"Memory":			EventType.MEMORY,
-			"Divine Beast":		EventType.DIVINEBEAST,
+			"Korok Seed":			EventType.KOROK,
+			"Spirit Orb":			EventType.SPIRITORB,
+			"Tower Activation":		EventType.TOWERACTIVATION,
+			"Travel Button":		EventType.TRAVELBUTTON,
+			"Loading Screen":		EventType.LOADINGSCREEN,
+			"Black Screen":			EventType.BLACKSCREEN,
+			"White Screen":			EventType.WHITESCREEN,
+			"Album Page":			EventType.ALBUMPAGE,
+			"Stone Talus":			EventType.STONETALUS,
+			"Frost Talus":			EventType.FROSTTALUS,
+			"Igneo Talus":			EventType.IGNEOTALUS,
+			"Stalnox":				EventType.STALNOX,
+			"Molduga":				EventType.MOLDUGA,
+			"Zora Monument":		EventType.ZORAMONUMENT,
+			"Dialog":				EventType.DIALOG,
+			"Gate Registered":  	EventType.GATEREGISTERED,
+			"Slate Authenticated":	EventType.SLATEAUTHENTICATED,
+			"Revali Gale":			EventType.REVALIGALE,
+			"Urbosa Fury":			EventType.URBOSAFURY,
+			"Mipha Grace":			EventType.MIPHAGRACE,
+			"Daruk Protection":		EventType.DARUKPROTECTION,
+			"Load":					EventType.LOAD,
+			"Warp":					EventType.WARP,
+			"Shrine":				EventType.SHRINE,
+			"Memory":				EventType.MEMORY,
+			"Medoh":				EventType.MEDOH,
+			"Naboris":				EventType.NABORIS,
+			"Ruta":					EventType.RUTA,
+			"Rudania":				EventType.RUDANIA,
 		};
 		EventType.fromText = text => {
 			if (text in EventType.textToType)
@@ -113,16 +131,19 @@ const LabelType = {
 	TOWER:				2,
 	KOROK:				3,
 	MEMORY:				4,
-	DIVINEBEAST:		5,
-	ZORAMONUMENT:		6,
-	TECHLAB:			7,
-	SOR:				8,
-	DIVINEBEASTTAMED:	9,
-	STONETALUS:			10,
-	IGNEOTALUS:			11,
-	FROSTTALUS:			12,
-	STALNOX:			13,
-	MOLDUGA:			14,
+	MEDOH:				5,
+	NABORIS:			6,
+	RUTA:				7,
+	RUDANIA:			8,
+	ZORAMONUMENT:		9,
+	TECHLAB:			10,
+	SOR:				11,
+	DIVINEBEASTTAMED:	12,
+	STONETALUS:			13,
+	IGNEOTALUS:			14,
+	FROSTTALUS:			15,
+	STALNOX:			16,
+	MOLDUGA:			17,
 	fromLabel : label => {
 		if (label.endsWith('Shrine'))
 			return LabelType.SHRINE;
@@ -136,7 +157,14 @@ const LabelType = {
 			if (label.endsWith('(Tamed)'))
 				return LabelType.DIVINEBEASTTAMED;
 			else
-				return LabelType.DIVINEBEAST;
+				if (label == "Vah Medoh")
+					return LabelType.MEDOH;
+				else if (label == "Vah Naboris")
+					return LabelType.NABORIS;
+				else if (label == "Vah Ruta")
+					return LabelType.RUTA;
+				else if (label == "Vah Rudania")
+					return LabelType.RUDANIA;
 		else if (label.startsWith('Zora Monument'))
 			return LabelType.ZORAMONUMENT;
 		else if (label.endsWith('Tech Lab'))
@@ -171,6 +199,12 @@ function labelAndEventTypesMatch(labelType, eventType) {
 		return labelType == LabelType.SHRINE;
 	else if (eventType == EventType.MEMORY)
 		return labelType == LabelType.MEMORY;
-	else if (eventType == EventType.DIVINEBEAST)
-		return labelType == LabelType.DIVINEBEAST;
+	else if (eventType == EventType.MEDOH)
+		return labelType == LabelType.MEDOH;
+	else if (eventType == EventType.NABORIS)
+		return labelType == LabelType.NABORIS;
+	else if (eventType == EventType.RUTA)
+		return labelType == LabelType.RUTA;
+	else if (eventType == EventType.RUDANIA)
+		return labelType == LabelType.RUDANIA;
 }
