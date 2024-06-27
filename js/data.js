@@ -136,6 +136,14 @@ async function loadSavedFile() {
 	}
 }
 
+function autoLabel() {
+	for (let eventIdx = 0; eventIdx < g_events.length; eventIdx++) {
+		if (g_events[eventIdx].type == EventType.ZORAMONUMENT && g_events[eventIdx].monumentId) {
+			assignLabelToEvent(eventIdx, "Zora Monument " + g_events[eventIdx].monumentId.toString().padStart(2, '0'));
+		}
+	}
+}
+
 function initLoadButton() {
 	const btn = document.getElementById('btn-load');
 
@@ -259,6 +267,8 @@ function initLoadButton() {
 										'videoFileIdx': rawFileIdx,
 										'seekFrameInVideo': seekFrame,
 									};
+									if (type == EventType.ZORAMONUMENT)
+										evt.monumentId = rawDoc.events[eventIdx].id;
 									if (rawDoc.events[eventIdx].segments) {
 										evt.segments = rawDoc.events[eventIdx].segments;
 										if (evt.segments[evt.segments.length - 1][0] != frameRange[1])
@@ -313,6 +323,8 @@ function initLoadButton() {
 						g_runDoc = runDoc;
 						g_events = events;
 						g_folderHandle = folderHandle;
+
+						autoLabel();
 
 						loadSavedFile();
 
@@ -543,14 +555,14 @@ function selectEvent(eventIdx, shouldHighlightMarker = true) {
 	if (g_selectedEventIdx == 0) {
 		guideLabel("", g_events[g_selectedEventIdx].type);
 		bounds.extend(g_guideLines.getBounds());
-		if (shouldHighlightMarker)
+		if (shouldHighlightMarker && bounds.isValid())
 			g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 	}
 	else if (g_selectedEventIdx > 0) {
 		if (g_events[g_selectedEventIdx - 1].label) {
 			guideLabel(g_events[g_selectedEventIdx - 1].label, g_events[g_selectedEventIdx].type);
 			bounds.extend(g_guideLines.getBounds());
-			if (shouldHighlightMarker)
+			if (shouldHighlightMarker && bounds.isValid())
 				g_map.fitBounds(bounds, { maxZoom : g_map.getZoom() });
 		}
 		else

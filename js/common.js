@@ -153,10 +153,10 @@ const LabelType = {
 			return LabelType.KOROK;
 		else if (label.startsWith('Memory'))
 			return LabelType.MEMORY;
-		else if (label.startsWith('Vah'))
+		else if (label.startsWith('Vah')) {
 			if (label.endsWith('(Tamed)'))
 				return LabelType.DIVINEBEASTTAMED;
-			else
+			else {
 				if (label == "Vah Medoh")
 					return LabelType.MEDOH;
 				else if (label == "Vah Naboris")
@@ -165,6 +165,8 @@ const LabelType = {
 					return LabelType.RUTA;
 				else if (label == "Vah Rudania")
 					return LabelType.RUDANIA;
+			}
+		}
 		else if (label.startsWith('Zora Monument'))
 			return LabelType.ZORAMONUMENT;
 		else if (label.endsWith('Tech Lab'))
