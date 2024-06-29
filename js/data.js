@@ -137,11 +137,15 @@ async function loadSavedFile() {
 }
 
 function autoLabel() {
+	let numAutoLabeled = 0;
 	for (let eventIdx = 0; eventIdx < g_events.length; eventIdx++) {
 		if (g_events[eventIdx].type == EventType.ZORAMONUMENT && g_events[eventIdx].monumentId) {
 			assignLabelToEvent(eventIdx, "Zora Monument " + g_events[eventIdx].monumentId.toString().padStart(2, '0'));
+			numAutoLabeled++;
 		}
 	}
+	if (numAutoLabeled > 0)
+		logMessage("Auto-labeled " + numAutoLabeled + " events");
 }
 
 function initLoadButton() {
@@ -315,7 +319,7 @@ function initLoadButton() {
 						logMessage("Loaded " + events.length + " events. Ignored " + numIgnoredEvents + ".");
 						logMessage("Loaded events by type:");
 						for (const key in numLoadedEvents) {
-							logMessage(EventType.toName(key) + ": " + numLoadedEvents[key]);
+							logMessage('&nbsp;&nbsp;'+ EventType.toText(key) + ": " + numLoadedEvents[key]);
 						}
 
 						// assign loaded data to global instances, 
