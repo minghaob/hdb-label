@@ -58,6 +58,11 @@ function initMap() {
 		iconSize:     [20, 20],
 		iconAnchor:   [10, 10],
 	});
+	var starIcon = L.icon({
+		iconUrl: 'icons/star.png',
+		iconSize:     [16, 16],
+		iconAnchor:   [8, 8],
+	});
 
 	fetch('data/coords.json').then(response => {
 		if (response.ok)
@@ -109,6 +114,10 @@ function initMap() {
 			}
 			else if (k.endsWith('Tech Lab')) {
 				icon = techLabIcon;
+				zOffset = -1000;
+			}
+			else if (k == 'Paraglider' || k == 'Thunder Helm') {
+				icon = starIcon;
 				zOffset = -1000;
 			}
 			else
