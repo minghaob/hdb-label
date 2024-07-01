@@ -49,14 +49,16 @@ const EventType = {
 	URBOSAFURY:			19,
 	MIPHAGRACE:			20,
 	DARUKPROTECTION:	21,
-	LOAD:				22,
-	WARP:				23,
-	SHRINE:				24,
-	MEMORY: 			25,
-	MEDOH:				26,
-	NABORIS:			27,
-	RUTA:				28,
-	RUDANIA:			29,
+	PARAGLIDER:			22,
+	THUNDERHELM:		23,
+	LOAD:				24,
+	WARP:				25,
+	SHRINE:				26,
+	MEMORY: 			27,
+	MEDOH:				28,
+	NABORIS:			29,
+	RUTA:				30,
+	RUDANIA:			31,
 
 	init : () => {
 		EventType.valueToName = {};
@@ -94,6 +96,8 @@ const EventType = {
 			"Urbosa Fury":			EventType.URBOSAFURY,
 			"Mipha Grace":			EventType.MIPHAGRACE,
 			"Daruk Protection":		EventType.DARUKPROTECTION,
+			"Paraglider":			EventType.PARAGLIDER,
+			"Thunder Helm":			EventType.THUNDERHELM,
 			"Load":					EventType.LOAD,
 			"Warp":					EventType.WARP,
 			"Shrine":				EventType.SHRINE,
@@ -144,6 +148,8 @@ const LabelType = {
 	FROSTTALUS:			15,
 	STALNOX:			16,
 	MOLDUGA:			17,
+	PARAGLIDER:			18,
+	THUNDERHELM:		19,
 	fromLabel : label => {
 		if (label.endsWith('Shrine'))
 			return LabelType.SHRINE;
@@ -173,6 +179,10 @@ const LabelType = {
 			return LabelType.TECHLAB;
 		else if (label == 'Shrine of Resurrection')
 			return LabelType.SOR;
+		else if (label == 'Paraglider')
+			return LabelType.PARAGLIDER;
+		else if (label == 'Thunder Helm')
+			return LabelType.THUNDERHELM;
 		else
 			return LabelType.UNKNOWN;
 	}
@@ -195,6 +205,10 @@ function labelAndEventTypesMatch(labelType, eventType) {
 		return labelType == LabelType.MOLDUGA;
 	else if (eventType == EventType.ZORAMONUMENT)
 		return labelType == LabelType.ZORAMONUMENT;
+	else if (eventType == EventType.PARAGLIDER)
+		return labelType == LabelType.PARAGLIDER;
+	else if (eventType == EventType.THUNDERHELM)
+		return labelType == LabelType.THUNDERHELM;
 	else if (eventType == EventType.WARP)
 		return labelType == LabelType.SHRINE || labelType == LabelType.TOWER || labelType == LabelType.SOR || labelType == LabelType.TECHLAB || labelType == LabelType.DIVINEBEASTTAMED;
 	else if (eventType == EventType.SHRINE)

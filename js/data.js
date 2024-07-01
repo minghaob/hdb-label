@@ -143,6 +143,14 @@ function autoLabel() {
 			assignLabelToEvent(eventIdx, "Zora Monument " + g_events[eventIdx].monumentId.toString().padStart(2, '0'));
 			numAutoLabeled++;
 		}
+		if (g_events[eventIdx].type == EventType.PARAGLIDER) {
+			assignLabelToEvent(eventIdx, "Paraglider");
+			numAutoLabeled++;
+		}
+		if (g_events[eventIdx].type == EventType.THUNDERHELM) {
+			assignLabelToEvent(eventIdx, "Thunder Helm");
+			numAutoLabeled++;
+		}
 	}
 	if (numAutoLabeled > 0)
 		logMessage("Auto-labeled " + numAutoLabeled + " events");
@@ -255,6 +263,7 @@ function initLoadButton() {
 									let type = EventType.fromText(rawDoc.events[eventIdx].type);
 									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
 										&& type != EventType.IGNEOTALUS && type != EventType.STALNOX && type != EventType.MOLDUGA && type != EventType.ZORAMONUMENT
+										&& type != EventType.PARAGLIDER && type != EventType.THUNDERHELM
 										&& type != EventType.WARP && type != EventType.SHRINE && type != EventType.MEMORY
 										&& type != EventType.MEDOH && type != EventType.NABORIS && type != EventType.RUTA && type != EventType.RUDANIA){
 										numIgnoredEvents++;
