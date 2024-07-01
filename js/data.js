@@ -227,9 +227,10 @@ function initLoadButton() {
 					if (numLoadedVideos == runDoc.videos.length) {
 						let events = [];
 
+						let videoBaseFrame = 0;		// overall frame index of current video's first segment's first frame
+
 						// collect events from all raw files
 						try {
-							let videoBaseFrame = 0;		// overall frame index of current video's first segment's first frame
 							for (let rawFileIdx = 0; rawFileIdx < runDoc.videos.length; rawFileIdx++) {
 								let fileName = 'assembled_' + rawFileIdx.toString() + '.yaml';		// raw files has filename numbered from 1 instead of 0
 								const fileHandle = await folderHandle.getFileHandle(fileName, { create: false });
@@ -291,7 +292,7 @@ function initLoadButton() {
 												throw (fileName + ': segment frame ' + evt.segments[segIdx][0] + ' event frame range');
 											evt.segments[segIdx][0] = videoFrameToOverallFrame(evt.segments[segIdx][0]);
 										}
-								}
+									}
 									events.push(evt);
 									numLoadedEvents[type] = (numLoadedEvents[type] ?? 0) + 1;
 								}
@@ -305,6 +306,15 @@ function initLoadButton() {
 							logMessage('Error loading run: ' + error);
 							return;
 						}
+
+						events.push({
+							'beginFrame': videoBaseFrame - 1,
+							'endFrame': videoBaseFrame - 1,
+							'text': EventType.toText(EventType.GG),
+							'type': EventType.GG,
+							'videoFileIdx': runDoc.videos.length - 1,
+							'seekFrameInVideo': runDoc.videos.at(-1).segments.at(-1)[1],
+						});
 
 						// feed collected events to event table
 						{

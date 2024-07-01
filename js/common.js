@@ -59,6 +59,7 @@ const EventType = {
 	NABORIS:			29,
 	RUTA:				30,
 	RUDANIA:			31,
+	GG:					255,
 
 	init : () => {
 		EventType.valueToName = {};
@@ -106,6 +107,7 @@ const EventType = {
 			"Naboris":				EventType.NABORIS,
 			"Ruta":					EventType.RUTA,
 			"Rudania":				EventType.RUDANIA,
+			"GG":					EventType.GG,
 		};
 		EventType.fromText = text => {
 			if (text in EventType.textToType)
@@ -223,4 +225,6 @@ function labelAndEventTypesMatch(labelType, eventType) {
 		return labelType == LabelType.RUTA;
 	else if (eventType == EventType.RUDANIA)
 		return labelType == LabelType.RUDANIA;
+	else if (eventType == EventType.GG)		// last segment can match any label (Usually it's "Memory Final")
+		return true;
 }
