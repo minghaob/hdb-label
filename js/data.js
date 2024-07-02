@@ -293,6 +293,8 @@ function initLoadButton() {
 											evt.segments[segIdx][0] = videoFrameToOverallFrame(evt.segments[segIdx][0]);
 										}
 									}
+									if (events.length > 0 && evt.beginFrame <= events.at(-1).endFrame)
+										throw (fileName + ': event frame ' + frameRange[0] + ' not larger than previous event end frame ' + (events.at(-1).endFrame - videoBaseFrame + runDoc.videos[rawFileIdx].segments[0][0]));
 									events.push(evt);
 									numLoadedEvents[type] = (numLoadedEvents[type] ?? 0) + 1;
 								}
