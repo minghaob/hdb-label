@@ -418,6 +418,8 @@ async function SaveProgress() {
 		saveObj.runner = g_runDoc.runner;
 	if (g_runDoc.src_id)
 		saveObj.src_id = g_runDoc.src_id;
+	if (g_runDoc.route)
+		saveObj.route = g_runDoc.route;
 	saveObj.videos = [];
 	for (let i = 0; i < g_runDoc.videos.length; i++) {
 		let curVideo = {};
