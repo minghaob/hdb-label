@@ -1,9 +1,8 @@
-let g_commu1OrderMarkovMove = {};           // label -> {           mapping from current label string
+let g_1OrderMarkovMove = {};                // label -> {           mapping from current label string
                                             //   .totalCount
                                             //   .next              array of {.label, .count}
                                             // }
-let g_runner1OrderMarkovMove = {};          // similar to g_commu1OrderMarkovMove but one for each runner (runner name as first level key)
-let g_existingRuns = new Set();
+let g_dbRuns = {};
 
 function addMove(markovMove, last, cur) {
     if (!markovMove[last])
@@ -33,6 +32,36 @@ function addMove(markovMove, last, cur) {
     }
 }
 
+function setupGuideMoves(route, runner) {
+    let numRunsWithRouteInDB = 0;
+    if (route)
+        for (const [uid, runDoc] of Object.entries(g_dbRuns)) {
+            if (runDoc.route == route)
+                numRunsWithRouteInDB++;
+        }
+
+    if (route) {
+        if (numRunsWithRouteInDB > 0)
+            logMessage("Guiding with " + numRunsWithRouteInDB + " runs in HundoDB using route " + route);
+        else {
+            logMessage("Route " + route + " not found in HundoDB. Guiding with all " + Object.keys(g_dbRuns).length + " runs in DB.");
+            route = null;
+        }
+    }
+    else
+        logMessage("No route given. Guiding with all "+ Object.keys(g_dbRuns).length + " runs in HundoDB.");
+
+    for (const [uid, runDoc] of Object.entries(g_dbRuns))
+        if (!route || runDoc.route == route) {
+            const events = runDoc.events;
+            for (let evtIdx = 0; evtIdx < events.length; evtIdx++) {
+                let last = evtIdx == 0 ? "" : events[evtIdx - 1].label;
+                let cur = events[evtIdx].label;
+                addMove(g_1OrderMarkovMove, last, cur);
+            }
+        }
+}
+
 const hdbRunsURL = 'https://minghaob.github.io/hundodb/runs/';
 fetch(hdbRunsURL + 'list.txt')
     .then(response => response.text())
@@ -54,21 +83,7 @@ fetch(hdbRunsURL + 'list.txt')
                     .then(response => response.text())
                     .then(text => {
                         let runDoc = jsyaml.load(text);
-                        let runnerMove;
-                        if (runDoc.runner) {
-                            if (!g_runner1OrderMarkovMove[runDoc.runner])
-                                g_runner1OrderMarkovMove[runDoc.runner] = {};
-                            runnerMove = g_runner1OrderMarkovMove[runDoc.runner];
-                        }
-                        const events = runDoc.events;
-                        for (let evtIdx = 0; evtIdx < events.length; evtIdx++) {
-                            let last = evtIdx == 0 ? "" : events[evtIdx - 1].label;
-                            let cur = events[evtIdx].label;
-                            addMove(g_commu1OrderMarkovMove, last, cur);
-                            if (runnerMove)
-                                addMove(runnerMove, last, cur);
-                        }
-                        g_existingRuns.add(runDoc.uid);
+                        g_dbRuns[runDoc.uid] = runDoc;
                         numProcessedRuns++;
                         numLoadedRuns++;
                         if (numProcessedRuns == numTotalRuns)

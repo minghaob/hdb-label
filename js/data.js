@@ -171,8 +171,8 @@ function initLoadButton() {
 				runDoc = jsyaml.load(content);
 				if (!runDoc.uid)
 					throw ('Missing uid in run.yaml');
-				if (g_existingRuns.has(runDoc.uid))
-					window.alert("Run's uid \"" + runDoc.uid + "\" already used by another run in HundoDB. Only proceed if it's intended.");
+				if (runDoc.uid in g_dbRuns)
+					window.alert("Run's uid \"" + runDoc.uid + "\" already used by a run in HundoDB. Only proceed if it's intended.");
 				if (!runDoc.videos || !Array.isArray(runDoc.videos))
 					throw ('expecting video element in run.yaml as array');
 			}
@@ -352,6 +352,8 @@ function initLoadButton() {
 						autoLabel();
 
 						loadSavedFile();
+
+						setupGuideMoves(runDoc.route, runDoc.runner);
 
 						selectEvent(0);
 					}

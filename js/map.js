@@ -172,12 +172,7 @@ function guideLabel(label, expectedNextEventType = null) {
 		return;
 
 	// if there's a runner, use runner's previous runs
-	let markovMove = (g_runDoc.runner && g_runDoc.runner.length > 0) ? g_runner1OrderMarkovMove[g_runDoc.runner] : null;
-	// otherwise use all community runs
-	if (!markovMove)
-		markovMove = g_commu1OrderMarkovMove;
-	if (!markovMove)
-		return;
+	let markovMove = g_1OrderMarkovMove;
 
 	const entry = markovMove[label];			// label could also be an empty string which indicates that it's the first move of the run, markovMove should have a corresponding entry
 	if (!entry)
