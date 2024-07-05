@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game Rectangle Finder</title>
+  <style>
+    #video, #canvas {
+      display: block;
+      margin: 20px 0;
+    }
+    #controls {
+      margin: 20px 0;
+    }
+    .selection {
+      position: absolute;
+      border: 2px dashed red;
+      pointer-events: none;
+    }
+    #container {
+      position: relative;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <input type="file" id="videoFileInput" accept="video/*">
+  <div id="container">
+    <video id="video" controls></video>
+    <div id="selection" class="selection"></div>
+  </div>
+  <div id="controls">
+    <label for="rectX">X:</label>
+    <input type="number" id="rectX" value="0">
+    <label for="rectY">Y:</label>
+    <input type="number" id="rectY" value="0">
+    <label for="maxX">Max X:</label>
+    <input type="number" id="maxX" value="100">
+    <label for="maxY">Max Y:</label>
+    <input type="number" id="maxY" value="100">
+    <button id="extractButton">Extract Frame</button>
+    <p id="aspectRatio">Aspect Ratio: </p>
+    <button id="backwardBtn">Backward 10s</button>
+    <button id="forwardBtn">Forward 10s</button>
+  </div>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <br>
+  <button id="downloadButton">Download Image</button>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const videoFileInput = document.getElementById('videoFileInput');
+    const rectX = document.getElementById('rectX');
+    const rectY = document.getElementById('rectY');
+    const maxX = document.getElementById('maxX');
+    const maxY = document.getElementById('maxY');
+    const extractButton = document.getElementById('extractButton');
+    const downloadButton = document.getElementById('downloadButton');
+    const selection = document.getElementById('selection');
+    const container = document.getElementById('container');
+    const aspectRatioDisplay = document.getElementById('aspectRatio');
+    const backwardBtn = document.getElementById('backwardBtn');
+    const forwardBtn = document.getElementById('forwardBtn');
+
+    videoFileInput.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      const url = URL.createObjectURL(file);
+      video.src = url;
+      video.load();
+    });
+
+    video.addEventListener('loadedmetadata', function() {
+      updateSelectionOverlay();
+    });
+
+    extractButton.addEventListener('click', function() {
+      const x = parseInt(rectX.value);
+      const y = parseInt(rectY.value);
+      const width = parseInt(maxX.value) - x;
+      const height = parseInt(maxY.value) - y;
+
+      canvas.width = width;
+      canvas.height = height;
+
+      // Clear the canvas and fill with black
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw the video frame onto the canvas
+      ctx.drawImage(video, x, y, width, height, 0, 0, width, height);
+      canvas.style.display = 'block';
+    });
+
+    downloadButton.addEventListener('click', function() {
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = 'frame.png';
+      link.click();
+    });
+
+    function updateSelectionOverlay() {
+      const x = parseInt(rectX.value);
+      const y = parseInt(rectY.value);
+      const width = parseInt(maxX.value) - x;
+      const height = parseInt(maxY.value) - y;
+
+      // Get video bounding rect to adjust for any offset
+      const videoRect = video.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      // Adjust the position based on the container's position and video offset
+      const offsetX = videoRect.left - containerRect.left;
+      const offsetY = videoRect.top - containerRect.top;
+
+      selection.style.left = `${x + offsetX}px`;
+      selection.style.top = `${y + offsetY}px`;
+      selection.style.width = `${width}px`;
+      selection.style.height = `${height}px`;
+      selection.style.display = 'block';
+
+      aspectRatioDisplay.textContent = `Aspect Ratio: ${(width / height).toFixed(4)}`;
+    }
+
+    rectX.addEventListener('input', updateSelectionOverlay);
+    rectY.addEventListener('input', updateSelectionOverlay);
+    maxX.addEventListener('input', updateSelectionOverlay);
+    maxY.addEventListener('input', updateSelectionOverlay);
+
+    backwardBtn.addEventListener('click', () => {
+      video.currentTime = Math.max(0, video.currentTime - 10);
+    });
+
+    forwardBtn.addEventListener('click', () => {
+      video.currentTime = Math.min(video.duration, video.currentTime + 10);
+    });
+  </script>
+</body>
+</html>
