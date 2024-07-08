@@ -63,6 +63,11 @@ function initMap() {
 		iconSize:     [16, 16],
 		iconAnchor:   [8, 8],
 	});
+	var npcIcon = L.icon({
+		iconUrl: 'icons/npc.png',
+		iconSize:     [20, 20],
+		iconAnchor:   [10, 10],
+	});
 
 	fetch('data/coords.json').then(response => {
 		if (response.ok)
@@ -119,6 +124,11 @@ function initMap() {
 			else if (k == 'Paraglider' || k == 'Thunder Helm') {
 				icon = starIcon;
 				zOffset = -1000;
+			}
+			else if (k.startsWith('Kass')) {
+				icon = npcIcon;
+				zOffset = -1000;
+
 			}
 			else
 				continue;
