@@ -63,7 +63,7 @@ function initMap() {
 		iconSize:     [16, 16],
 		iconAnchor:   [8, 8],
 	});
-	var npcIcon = L.icon({
+	var dialogIcon = L.icon({
 		iconUrl: 'icons/npc.png',
 		iconSize:     [20, 20],
 		iconAnchor:   [10, 10],
@@ -90,7 +90,7 @@ function initMap() {
 			}
 			else if (k.length == 3) {
 				icon = korokIcon;
-				zOffset = data[k].Y;
+				zOffset = data[k][1];
 			}
 			else if (k.startsWith('Vah')) {
 				var name = k.split(' ').slice(0, 2).join('_').toLowerCase();
@@ -125,13 +125,11 @@ function initMap() {
 				icon = starIcon;
 				zOffset = -1000;
 			}
-			else if (k.startsWith('Kass')) {
-				icon = npcIcon;
+			else {
+				icon = dialogIcon;
 				zOffset = -1000;
 			}
-			else
-				continue;
-			let marker = L.marker([-data[k].Z, data[k].X], {icon: icon, zIndexOffset : zOffset, keyboard: false});
+			let marker = L.marker([-data[k][2], data[k][0]], {icon: icon, zIndexOffset : zOffset, keyboard: false});
 			marker.addTo(markers).bindTooltip(k, { className : 'no-background-tooltip' });
 			if (g_markerMapping[k])
 				throw 'multiple markers with same name \'' + k + '\'';

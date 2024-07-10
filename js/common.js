@@ -192,6 +192,8 @@ const LabelType = {
 
 function dialogIdToLabel(id)
 {
+	if (id.startsWith('Sesami'))
+		return 'Sesami';
 	return id;
 }
 
