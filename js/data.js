@@ -151,6 +151,10 @@ function autoLabel() {
 			assignLabelToEvent(eventIdx, "Thunder Helm");
 			numAutoLabeled++;
 		}
+		if (g_events[eventIdx].type == EventType.DIALOG) {
+			assignLabelToEvent(eventIdx, dialogIdToLabel(g_events[eventIdx].dialogId));
+			numAutoLabeled++;
+		}
 	}
 	if (numAutoLabeled > 0)
 		logMessage("Auto-labeled " + numAutoLabeled + " events");
@@ -264,7 +268,7 @@ function initLoadButton() {
 									let type = EventType.fromText(rawDoc.events[eventIdx].type);
 									if (type != EventType.KOROK && type != EventType.TOWERACTIVATION && type != EventType.STONETALUS && type != EventType.FROSTTALUS
 										&& type != EventType.IGNEOTALUS && type != EventType.STALNOX && type != EventType.MOLDUGA && type != EventType.ZORAMONUMENT
-										&& type != EventType.PARAGLIDER && type != EventType.THUNDERHELM
+										&& type != EventType.PARAGLIDER && type != EventType.THUNDERHELM && type != EventType.DIALOG
 										&& type != EventType.WARP && type != EventType.SHRINE && type != EventType.MEMORY
 										&& type != EventType.MEDOH && type != EventType.NABORIS && type != EventType.RUTA && type != EventType.RUDANIA){
 										numIgnoredEvents++;
@@ -283,6 +287,8 @@ function initLoadButton() {
 									};
 									if (type == EventType.ZORAMONUMENT)
 										evt.monumentId = rawDoc.events[eventIdx].id;
+									else if (type == EventType.DIALOG)
+										evt.dialogId = rawDoc.events[eventIdx].id;
 									if (rawDoc.events[eventIdx].segments) {
 										evt.segments = rawDoc.events[eventIdx].segments;
 										if (evt.segments[evt.segments.length - 1][0] != frameRange[1])
@@ -439,6 +445,8 @@ async function SaveProgress() {
 				"label": gEvt.label,
 				"type": EventType.toText(gEvt.type),
 			};
+			if (gEvt.type == EventType.DIALOG)
+				evt.dialogId = gEvt.id;
 			if (gEvt.segments)
 				evt.segments = gEvt.segments;
 			saveObj.events.push(evt);

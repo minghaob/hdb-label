@@ -128,7 +128,6 @@ function initMap() {
 			else if (k.startsWith('Kass')) {
 				icon = npcIcon;
 				zOffset = -1000;
-
 			}
 			else
 				continue;

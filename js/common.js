@@ -190,6 +190,11 @@ const LabelType = {
 	}
 }
 
+function dialogIdToLabel(id)
+{
+	return id;
+}
+
 function labelAndEventTypesMatch(labelType, eventType) {
 	if (eventType == EventType.KOROK)
 		return labelType == LabelType.KOROK;
@@ -225,6 +230,8 @@ function labelAndEventTypesMatch(labelType, eventType) {
 		return labelType == LabelType.RUTA;
 	else if (eventType == EventType.RUDANIA)
 		return labelType == LabelType.RUDANIA;
+	else if (eventType == EventType.DIALOG)
+		return true;
 	else if (eventType == EventType.GG)		// last segment can match any label (Usually it's "Memory Final")
 		return true;
 }
