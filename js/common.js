@@ -233,7 +233,7 @@ function labelAndEventTypesMatch(labelType, eventType) {
 	else if (eventType == EventType.RUDANIA)
 		return labelType == LabelType.RUDANIA;
 	else if (eventType == EventType.DIALOG)
-		return true;
+		return labelType == LabelType.UNKNOWN;	// there's no DIALOG label type a.t.m., NPC labels all have type UNKNOWN
 	else if (eventType == EventType.GG)		// last segment can match any label (Usually it's "Memory Final")
 		return true;
 }
