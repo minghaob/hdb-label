@@ -446,7 +446,7 @@ async function SaveProgress() {
 				"type": EventType.toText(gEvt.type),
 			};
 			if (gEvt.type == EventType.DIALOG)
-				evt.dialogId = gEvt.id;
+				evt.dialogId = gEvt.dialogId;
 			if (gEvt.segments)
 				evt.segments = gEvt.segments;
 			saveObj.events.push(evt);
