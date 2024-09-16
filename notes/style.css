@@ -1,0 +1,30 @@
+img.ic {
+    height: 40px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+}
+img.code{
+	background-color: white;
+	height: 32px;
+}
+hr {
+	margin: 5px;
+}
+span.svr{
+	font-size: 24px;
+	font-weight: bold;
+	color: Crimson;
+}
+
+th, td {
+	border: 0px solid white; /* Sets 1px white border */
+}
+
+table.ct th, table.ct td {
+	padding: 3px;
+	border: 1px solid white; /* Sets 1px white border */
+	text-align: center;
+}
